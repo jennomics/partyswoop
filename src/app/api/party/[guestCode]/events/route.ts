@@ -5,11 +5,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
-  { params }: { params: { guestCode: string } }
+  { params }: { params: Promise<{ guestCode: string }> }
 ) {
   try {
+    const { guestCode } = await params;
     const party = await prisma.party.findUnique({
-      where: { guestCode: params.guestCode },
+      where: { guestCode },
       select: { id: true, expiresAt: true },
     });
 

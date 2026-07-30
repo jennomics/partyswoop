@@ -18,11 +18,12 @@ import { prisma } from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { hostCode: string } }
+  { params }: { params: Promise<{ hostCode: string }> }
 ) {
   try {
+    const { hostCode } = await params;
     const party = await prisma.party.findUnique({
-      where: { hostCode: params.hostCode },
+      where: { hostCode },
       include: {
         menuItems: { orderBy: { createdAt: 'asc' } },
         locations: true,

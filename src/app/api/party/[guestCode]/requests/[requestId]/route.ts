@@ -3,11 +3,12 @@ import { prisma } from '@/lib/db';
 
 export async function GET(
   request: Request,
-  { params }: { params: { guestCode: string; requestId: string } }
+  { params }: { params: Promise<{ guestCode: string; requestId: string }> }
 ) {
   try {
+    const { guestCode, requestId } = await params;
     const party = await prisma.party.findUnique({
-      where: { guestCode: params.guestCode },
+      where: { guestCode },
       select: { id: true, expiresAt: true },
     });
 
@@ -20,7 +21,7 @@ export async function GET(
     }
 
     const requestRecord = await prisma.request.findFirst({
-      where: { id: params.requestId, partyId: party.id },
+      where: { id: requestId, partyId: party.id },
       include: { location: true },
     });
 

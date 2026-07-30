@@ -4,11 +4,12 @@ import { sseEventBus } from '@/lib/sse';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { hostCode: string; itemId: string } }
+  { params }: { params: Promise<{ hostCode: string; itemId: string }> }
 ) {
   try {
+    const { hostCode, itemId } = await params;
     const party = await prisma.party.findUnique({
-      where: { hostCode: params.hostCode },
+      where: { hostCode },
       select: { id: true, expiresAt: true },
     });
 
@@ -21,7 +22,7 @@ export async function PATCH(
     }
 
     const existingItem = await prisma.menuItem.findFirst({
-      where: { id: params.itemId, partyId: party.id },
+      where: { id: itemId, partyId: party.id },
     });
 
     if (!existingItem) {
@@ -44,7 +45,7 @@ export async function PATCH(
     }
 
     const updatedItem = await prisma.menuItem.update({
-      where: { id: params.itemId },
+      where: { id: itemId },
       data: updateData,
     });
 
@@ -60,11 +61,12 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { hostCode: string; itemId: string } }
+  { params }: { params: Promise<{ hostCode: string; itemId: string }> }
 ) {
   try {
+    const { hostCode, itemId } = await params;
     const party = await prisma.party.findUnique({
-      where: { hostCode: params.hostCode },
+      where: { hostCode },
       select: { id: true, expiresAt: true },
     });
 
@@ -77,17 +79,17 @@ export async function DELETE(
     }
 
     const existingItem = await prisma.menuItem.findFirst({
-      where: { id: params.itemId, partyId: party.id },
+      where: { id: itemId, partyId: party.id },
     });
 
     if (!existingItem) {
       return NextResponse.json({ error: 'Menu item not found.' }, { status: 404 });
     }
 
-    await prisma.menuItem.delete({ where: { id: params.itemId } });
+    await prisma.menuItem.delete({ where: { id: itemId } });
 
     // Publish SSE event to notify connected guests
-    sseEventBus.publish(party.id, 'menu-update', { deleted: params.itemId });
+    sseEventBus.publish(party.id, 'menu-update', { deleted: itemId });
 
     return NextResponse.json({ success: true });
   } catch (error) {

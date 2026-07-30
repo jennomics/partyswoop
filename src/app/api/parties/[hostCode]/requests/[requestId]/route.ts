@@ -5,11 +5,12 @@ import { validateStatusTransition } from '@/lib/validation';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { hostCode: string; requestId: string } }
+  { params }: { params: Promise<{ hostCode: string; requestId: string }> }
 ) {
   try {
+    const { hostCode, requestId } = await params;
     const party = await prisma.party.findUnique({
-      where: { hostCode: params.hostCode },
+      where: { hostCode },
       select: { id: true, expiresAt: true },
     });
 
@@ -22,7 +23,7 @@ export async function PATCH(
     }
 
     const existingRequest = await prisma.request.findFirst({
-      where: { id: params.requestId, partyId: party.id },
+      where: { id: requestId, partyId: party.id },
     });
 
     if (!existingRequest) {
@@ -37,7 +38,7 @@ export async function PATCH(
     }
 
     const updatedRequest = await prisma.request.update({
-      where: { id: params.requestId },
+      where: { id: requestId },
       data: { status: body.status },
       include: { location: true },
     });

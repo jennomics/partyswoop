@@ -6,11 +6,13 @@ import { validateRequestCategory, validateDeliveryTarget } from '@/lib/validatio
 
 export async function POST(
   request: Request,
-  { params }: { params: { guestCode: string } }
+  { params }: { params: Promise<{ guestCode: string }> }
 ) {
   try {
+    const { guestCode } = await params;
+
     // Rate limit by guestCode (bounds abuse per-party link, not spoofable like X-Forwarded-For)
-    const rateLimitResult = guestRequestLimiter.check(params.guestCode);
+    const rateLimitResult = guestRequestLimiter.check(guestCode);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
@@ -24,7 +26,7 @@ export async function POST(
       );
     }
     const party = await prisma.party.findUnique({
-      where: { guestCode: params.guestCode },
+      where: { guestCode },
       select: {
         id: true,
         expiresAt: true,
