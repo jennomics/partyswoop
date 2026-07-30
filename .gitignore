@@ -38,3 +38,6 @@ next-env.d.ts
 
 # prisma
 /prisma/*.db
+
+# groundcrew runtime logs (auto-generated, can be large)
+.kiro/agent-log.md
