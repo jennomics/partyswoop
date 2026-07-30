@@ -9,10 +9,8 @@ export async function POST(
   { params }: { params: { guestCode: string } }
 ) {
   try {
-    // Rate limit by IP (falls back to guestCode if IP unavailable)
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const rateLimitKey = forwardedFor?.split(',')[0]?.trim() || params.guestCode;
-    const rateLimitResult = guestRequestLimiter.check(rateLimitKey);
+    // Rate limit by guestCode (bounds abuse per-party link, not spoofable like X-Forwarded-For)
+    const rateLimitResult = guestRequestLimiter.check(params.guestCode);
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

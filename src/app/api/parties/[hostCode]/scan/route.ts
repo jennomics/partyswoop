@@ -45,13 +45,20 @@ export async function POST(
       );
     }
 
-    // Convert files to buffers
+    // Convert files to buffers with per-file size validation
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
     const imageBuffers: Buffer[] = [];
     for (const file of files) {
       if (!(file instanceof File)) {
         return NextResponse.json(
           { error: 'Invalid file format.' },
           { status: 400 }
+        );
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { error: 'Each image must be under 5MB. Please resize or compress your photos and try again.' },
+          { status: 413 }
         );
       }
       const arrayBuffer = await file.arrayBuffer();
