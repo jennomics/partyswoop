@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+/**
+ * Security model for host endpoints:
+ *
+ * Authorization is based solely on possession of the unguessable hostCode (~46 bits
+ * of entropy from a 55-char alphabet, 8 chars). There are no sessions, cookies, or
+ * authentication tokens.
+ *
+ * CSRF protection: All state-mutating host endpoints require JSON Content-Type bodies.
+ * Browsers enforce CORS preflight for cross-origin requests with non-simple content
+ * types, which blocks cross-site form submissions and scripted attacks from other
+ * origins. Since no cookies are used, there are no ambient credentials to exploit.
+ * This is a deliberate security boundary -- if sessions or cookies are ever added,
+ * explicit CSRF tokens must also be introduced.
+ */
+
 export async function GET(
   request: Request,
   { params }: { params: { hostCode: string } }

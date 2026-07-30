@@ -22,29 +22,39 @@ export async function scanFridgePhotos(
       },
     }));
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Look at these photos of a fridge or cooler. Identify all visible drink names/brands. Return ONLY a JSON array of drink name strings, e.g. ["Coca-Cola", "Bud Light", "La Croix Lime"]. If you cannot identify any drinks, return an empty array [].',
-              },
-              ...imageContent,
-            ],
-          },
-        ],
-        max_tokens: 500,
-      }),
-    });
+    // 30-second timeout to prevent hanging on slow OpenAI responses
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
+    let response: Response;
+    try {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Look at these photos of a fridge or cooler. Identify all visible drink names/brands. Return ONLY a JSON array of drink name strings, e.g. ["Coca-Cola", "Bud Light", "La Croix Lime"]. If you cannot identify any drinks, return an empty array [].',
+                },
+                ...imageContent,
+              ],
+            },
+          ],
+          max_tokens: 500,
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       return {

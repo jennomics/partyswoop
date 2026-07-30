@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sseEventBus } from '@/lib/sse';
+import { guestRequestLimiter } from '@/lib/rateLimit';
 import { validateRequestCategory, validateDeliveryTarget } from '@/lib/validation';
 
 export async function POST(
@@ -8,6 +9,22 @@ export async function POST(
   { params }: { params: { guestCode: string } }
 ) {
   try {
+    // Rate limit by IP (falls back to guestCode if IP unavailable)
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const rateLimitKey = forwardedFor?.split(',')[0]?.trim() || params.guestCode;
+    const rateLimitResult = guestRequestLimiter.check(rateLimitKey);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before submitting again.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(rateLimitResult.retryAfterMs / 1000)),
+          },
+        }
+      );
+    }
     const party = await prisma.party.findUnique({
       where: { guestCode: params.guestCode },
       select: {

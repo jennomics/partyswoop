@@ -61,6 +61,19 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
     fetchRequests();
   }, [fetchRequests]);
 
+  // Polling fallback: refetch when tab becomes visible (handles missed SSE events)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchRequests();
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchRequests]);
+
   // Handle SSE events
   useEffect(() => {
     if (!sseEvent) return;

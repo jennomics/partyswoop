@@ -1,9 +1,24 @@
+/**
+ * In-process SSE Event Bus
+ *
+ * IMPORTANT: This event bus is an in-memory singleton that only delivers events
+ * within the same Node.js process. It will NOT work across multiple server instances,
+ * containers, or serverless functions. For multi-instance deployments, replace with
+ * Redis pub/sub, Postgres LISTEN/NOTIFY, or another distributed messaging system.
+ *
+ * For this MVP, single-process deployment (e.g., `next start` on one container) is
+ * the expected production topology.
+ */
+
 type SSECallback = (eventType: string, data: unknown) => void;
 
 interface Subscriber {
   id: string;
   callback: SSECallback;
 }
+
+/** Heartbeat interval in milliseconds (30s keeps connections alive through proxies/ALBs) */
+export const SSE_HEARTBEAT_INTERVAL_MS = 30_000;
 
 class SSEEventBus {
   private subscribers: Map<string, Subscriber[]> = new Map();

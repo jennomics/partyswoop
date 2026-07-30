@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { sseEventBus } from '@/lib/sse';
+import { sseEventBus, SSE_HEARTBEAT_INTERVAL_MS } from '@/lib/sse';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +36,15 @@ export async function GET(
           encoder.encode(`event: connected\ndata: ${JSON.stringify({ partyId: party.id })}\n\n`)
         );
 
+        // Heartbeat to keep connection alive through proxies/load balancers
+        const heartbeat = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+          } catch {
+            clearInterval(heartbeat);
+          }
+        }, SSE_HEARTBEAT_INTERVAL_MS);
+
         // Subscribe to party events (host receives new-request and request-update)
         const unsubscribe = sseEventBus.subscribe(party.id, (eventType, data) => {
           try {
@@ -48,6 +57,7 @@ export async function GET(
 
         // Handle client disconnect
         request.signal.addEventListener('abort', () => {
+          clearInterval(heartbeat);
           unsubscribe();
           try {
             controller.close();

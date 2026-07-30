@@ -59,20 +59,38 @@ export async function POST(
       );
     }
 
-    const code = generateLocationCode(6);
-
-    const location = await prisma.location.create({
-      data: {
-        partyId: party.id,
-        name,
-        code,
-      },
-    });
+    // Retry with new codes on unique constraint collision (max 3 attempts)
+    const MAX_CODE_ATTEMPTS = 3;
+    let location;
+    for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
+      const code = generateLocationCode(6);
+      try {
+        location = await prisma.location.create({
+          data: {
+            partyId: party.id,
+            name,
+            code,
+          },
+        });
+        break;
+      } catch (err: unknown) {
+        // Prisma unique constraint violation code
+        const isPrismaUniqueError =
+          err !== null &&
+          typeof err === 'object' &&
+          'code' in err &&
+          (err as { code: string }).code === 'P2002';
+        if (isPrismaUniqueError && attempt < MAX_CODE_ATTEMPTS - 1) {
+          continue; // Retry with a new code
+        }
+        throw err;
+      }
+    }
 
     return NextResponse.json(
       {
         ...location,
-        guestLink: `/party/${party.guestCode}?location=${code}`,
+        guestLink: `/party/${party.guestCode}?location=${location!.code}`,
       },
       { status: 201 }
     );
