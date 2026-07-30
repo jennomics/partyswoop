@@ -1,5 +1,4 @@
 {
-  "url": "https://complexity-shield-miracle-tuition.trycloudflare.com",
-  "startedAt": "2026-07-30T17:58:07.274Z",
-  "host": "LANGs-MacBook-Pro.local"
+  "url": null,
+  "stoppedAt": "2026-07-30T18:07:35.732Z"
 }
