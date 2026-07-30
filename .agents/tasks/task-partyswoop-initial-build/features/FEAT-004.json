@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Testing, final integration verification, and production-readiness. Add meaningful tests for critical paths (API validation, status transitions, code generation), verify Docker build, add health check endpoint, and ensure the complete flow works end-to-end.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Install dev dependencies: jest, @testing-library/react, @testing-library/jest-dom, ts-jest or @swc/jest, jest-environment-jsdom.",
     "Create jest.config.ts configured for Next.js (with moduleNameMapper for @/ alias, transform for TypeScript, testEnvironment jsdom for component tests).",
@@ -34,5 +34,5 @@
     "Run docker build -t partyswoop:test . and confirm image builds"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "1. nanoid v5 is ESM-only; required adding transpilePackages: ['nanoid'] in next.config.js for Jest to transform it (next/jest uses this to build transformIgnorePatterns). 2. Docker environment uses Podman which defaults to OCI format - HEALTHCHECK requires --format docker flag for Podman but works natively with real Docker. 3. Prisma logs libssl warnings during Docker build but the Next.js build completes successfully. 4. All 53 tests pass. 5. @testing-library/jest-dom v7 requires Node >= 22 (not available in the node:20-alpine Docker image) but this only affects dev dependencies, not the production build."
 }
