@@ -18,7 +18,7 @@ Kiro (cloud) --> pushes code to GitHub --> groundcrew (local) polls & auto-pulls
 The user runs groundcrew locally with:
 
 ```bash
-groundcrew start ~/path/to/partyswoop
+groundcrew start ~/kiro/partyswoop
 ```
 
 Groundcrew then:
