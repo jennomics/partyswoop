@@ -1,5 +1,4 @@
 {
-  "url": "https://reporters-assessed-chamber-forgot.trycloudflare.com",
-  "startedAt": "2026-07-30T16:44:16.133Z",
-  "host": "LANGs-MacBook-Pro.local"
+  "url": null,
+  "stoppedAt": "2026-07-30T17:57:48.316Z"
 }
