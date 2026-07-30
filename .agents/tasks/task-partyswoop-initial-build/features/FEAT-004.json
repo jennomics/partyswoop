@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Testing, final integration verification, and production-readiness. Add meaningful tests for critical paths (API validation, status transitions, code generation), verify Docker build, add health check endpoint, and ensure the complete flow works end-to-end.",
+  "status": "pending",
+  "steps": [
+    "Install dev dependencies: jest, @testing-library/react, @testing-library/jest-dom, ts-jest or @swc/jest, jest-environment-jsdom.",
+    "Create jest.config.ts configured for Next.js (with moduleNameMapper for @/ alias, transform for TypeScript, testEnvironment jsdom for component tests).",
+    "Create src/lib/__tests__/codes.test.ts - Test code generation: codes are correct length, no ambiguous characters (0, O, I, l, 1), uniqueness over 1000 generations.",
+    "Create src/lib/__tests__/validation.test.ts - Test validateStatusTransition: new->seen OK, new->done OK, seen->done OK, done->anything rejected, seen->new rejected. Test validateRequestCategory with valid/invalid inputs. Test validateDeliveryTarget with missing fields.",
+    "Create src/lib/__tests__/ai.test.ts - Test scanFridgePhotos: mock fetch to simulate OpenAI response. Test missing API key returns friendly error. Test API error returns friendly error. Test empty/unreadable result returns friendly error. Test successful parse returns drink names array.",
+    "Create src/components/__tests__/RequestTracker.test.tsx - Test renders three status steps. Test highlights correct current step for each status. Test 'Seen' step is visually distinct.",
+    "Create src/components/__tests__/ErrorMessage.test.tsx - Test renders error text. Test is visible and styled appropriately.",
+    "Add test script to package.json: \"test\": \"jest --passWithNoTests\".",
+    "Create src/app/api/health/route.ts - GET endpoint returning {status: 'ok', timestamp: ISO string}. Used for Docker health checks and deployment readiness.",
+    "Update Dockerfile to include HEALTHCHECK instruction using the health endpoint.",
+    "Verify npm run build succeeds with all files in place.",
+    "Verify docker build succeeds.",
+    "Verify npm test passes all tests."
+  ],
+  "acceptance_criteria": [
+    "npm test runs and all tests pass",
+    "Code generation tests verify no ambiguous characters and correct length",
+    "Status transition validation tests cover all valid and invalid transitions",
+    "AI scan tests verify graceful degradation on all failure modes",
+    "RequestTracker component test verifies visual distinction of Seen state",
+    "npm run build succeeds",
+    "docker build succeeds",
+    "Health endpoint returns 200 with status ok"
+  ],
+  "verification": [
+    "Run npm test and confirm all tests pass with meaningful assertions",
+    "Run npm run build and confirm successful compilation",
+    "Run docker build -t partyswoop:test . and confirm image builds"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-partyswoop-initial-build",
+  "task_description": "Build the complete PartySwoop application - a real-time party request management system. Guests scan QR codes to request drinks/supplies/songs, hosts see requests with audio alerts and manage menu/locations. Features AI-powered fridge scanning for menu creation, SSE for real-time updates within 3 seconds, and 24-hour party expiry. Built with Next.js 14, PostgreSQL, Prisma, and Tailwind CSS.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

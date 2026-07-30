@@ -1,0 +1,29 @@
+{
+  "project_type": "Next.js 14 App Router full-stack application with real-time features",
+  "language": "TypeScript",
+  "build_system": "npm with Next.js CLI, Docker for production deployment",
+  "test_framework": "Jest with React Testing Library for components, supertest-style integration tests for API routes",
+  "build_command": "npm run build",
+  "test_command": "npm test",
+  "verification_instructions": "1. Run npm install, 2. Run npm run build to verify compilation, 3. Run npm test for unit/integration tests, 4. Run docker build to verify containerization",
+  "snapshot_or_generated_files": "Prisma client generated from schema (npx prisma generate). Not checked in - generated at build time.",
+  "setup_instructions": "npm install && npx prisma generate",
+  "environment_constraints": "Open internet - can install packages, pull Docker images, access external APIs. Node 22.23.1, npm 11.4.2, Docker 5.2.3 available.",
+  "contribution_requirements": "User preferences: never push unverified code, error messages in UI not console, no silent failures, zero terminal interaction for user, API routes must have try/catch with error in response body, graceful degradation (AI scan fails -> manual entry).",
+  "key_patterns": "Greenfield - establishing patterns: App Router with route groups for host/guest separation, SSE for real-time, Prisma for DB access, environment variables for secrets, Docker Compose for local dev with PostgreSQL.",
+  "relevant_files": [
+    "package.json",
+    "next.config.js",
+    "prisma/schema.prisma",
+    "src/app/layout.tsx",
+    "src/app/page.tsx",
+    "src/app/api/",
+    "src/app/party/[code]/",
+    "src/app/host/[hostCode]/",
+    "src/lib/db.ts",
+    "src/lib/sse.ts",
+    "Dockerfile",
+    "docker-compose.yml"
+  ],
+  "directory_structure": "src/app/ - Next.js App Router pages and API routes; src/lib/ - shared utilities (db, sse, ai); src/components/ - React components; prisma/ - database schema and migrations; public/ - static assets"
+}

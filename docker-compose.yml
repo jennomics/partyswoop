@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: partyswoop
+      POSTGRES_PASSWORD: partyswoop
+      POSTGRES_DB: partyswoop
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://partyswoop:partyswoop@db:5432/partyswoop
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

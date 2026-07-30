@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  DRINK
+  SUPPLY
+}
+
+enum RequestCategory {
+  DRINK
+  SUPPLY
+  SONG
+  OTHER
+}
+
+enum DeliveryType {
+  LOCATION
+  NAME
+}
+
+enum RequestStatus {
+  NEW
+  SEEN
+  DONE
+}
+
+model Party {
+  id        String     @id @default(cuid())
+  name      String
+  guestCode String     @unique @db.VarChar(8)
+  hostCode  String     @unique @db.VarChar(8)
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+
+  menuItems MenuItem[]
+  locations Location[]
+  requests  Request[]
+}
+
+model MenuItem {
+  id        String   @id @default(cuid())
+  partyId   String
+  name      String
+  available Boolean  @default(true)
+  category  Category
+  createdAt DateTime @default(now())
+
+  party Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
+
+  @@index([partyId])
+}
+
+model Location {
+  id      String @id @default(cuid())
+  partyId String
+  name    String
+  code    String @unique @db.VarChar(6)
+
+  party    Party     @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  requests Request[]
+
+  @@index([partyId])
+}
+
+model Request {
+  id            String          @id @default(cuid())
+  partyId       String
+  category      RequestCategory
+  item          String
+  note          String?
+  deliveryType  DeliveryType
+  deliveryValue String
+  status        RequestStatus   @default(NEW)
+  locationId    String?
+  createdAt     DateTime        @default(now())
+
+  party    Party     @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([partyId])
+  @@index([locationId])
+}
