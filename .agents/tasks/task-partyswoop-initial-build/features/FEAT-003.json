@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Complete frontend UI: landing/create page, host dashboard (request queue with audio alerts, menu management with fridge scan + review flow, location/QR management), and guest interface (request submission with live status tracker). All real-time updates via SSE. Mobile-first responsive design. All errors shown in UI.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create src/app/page.tsx - Landing page with 'Create a Party' form. Single input for party name (optional, placeholder shows default). Submit button creates party via POST /api/parties, then redirects to host dashboard. Show loading state during creation. Show error in UI if creation fails.",
     "Create src/app/host/[hostCode]/page.tsx - Host dashboard layout. Tabs or sections for: Requests (default view), Menu, Locations/QR. Fetches party data on load via GET /api/parties/[hostCode]. Shows party name, guest link (copyable), and time remaining. 404 page if party not found/expired.",
