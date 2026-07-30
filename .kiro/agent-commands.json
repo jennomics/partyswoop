@@ -1,5 +1,11 @@
 {
-  "commands": [],
-  "createdAt": null,
-  "source": null
+  "commands": [
+    {
+      "id": "install-deps-001",
+      "command": "npm install",
+      "description": "Install node_modules after fresh clone"
+    }
+  ],
+  "createdAt": "2026-07-30T18:00:00Z",
+  "source": "kiro"
 }
