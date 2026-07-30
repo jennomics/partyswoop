@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Complete API layer: party creation, menu management (CRUD + availability toggle), location/QR management, request submission with validation, request status transitions, fridge scan endpoint, and SSE streaming endpoints. Every route has try/catch with error messages in response body. Graceful degradation for AI scan.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create src/app/api/parties/route.ts - POST to create a party. Accepts optional name (defaults to 'My Party'). Generates guestCode and hostCode using codes.ts. Sets expiresAt to createdAt + 24h. Creates default supply menu items (toilet paper, sunscreen, bug spray, ice, cups, napkins, paper towels). Returns party data including both codes. Wrap in try/catch, return {error: string} on failure with appropriate HTTP status.",
     "Create src/app/api/parties/[hostCode]/route.ts - GET to fetch party details by hostCode (host authentication). Returns party with menu items, locations, and requests. 404 if not found or expired. try/catch wrapper.",
