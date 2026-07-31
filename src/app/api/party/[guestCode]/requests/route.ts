@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, menuItems, locations, requests } from '@/lib/schema';
+import { generateId } from '@/lib/id';
 import { sseEventBus } from '@/lib/sse';
 import { guestRequestLimiter } from '@/lib/rateLimit';
 import { validateRequestCategory, validateDeliveryTarget } from '@/lib/validation';
+import { eq, and } from 'drizzle-orm';
 
 export async function POST(
   request: Request,
@@ -25,25 +28,34 @@ export async function POST(
         }
       );
     }
-    const party = await prisma.party.findUnique({
-      where: { guestCode },
-      select: {
-        id: true,
-        expiresAt: true,
-        menuItems: { where: { available: true } },
-        locations: true,
-      },
+
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.guestCode, guestCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    // Fetch available menu items and locations
+    const availableMenuItems = await db
+      .select()
+      .from(menuItems)
+      .where(and(eq(menuItems.partyId, party.id), eq(menuItems.available, true)));
+
+    const partyLocations = await db
+      .select()
+      .from(locations)
+      .where(eq(locations.partyId, party.id));
+
+    const body = await request.json() as Record<string, any>;
 
     // Validate category
     const categoryValidation = validateRequestCategory(body.category);
@@ -64,7 +76,7 @@ export async function POST(
 
       // For DRINK requests, item must be on the available menu
       if (category === 'DRINK') {
-        const availableDrink = party.menuItems.find(
+        const availableDrink = availableMenuItems.find(
           (item) => item.category === 'DRINK' && item.name === body.item.trim()
         );
         if (!availableDrink) {
@@ -90,7 +102,7 @@ export async function POST(
 
       // LOCATION delivery only allowed if a valid location exists
       if (deliveryType === 'LOCATION') {
-        const location = party.locations.find((l) => l.name === deliveryValue || l.code === deliveryValue);
+        const location = partyLocations.find((l) => l.name === deliveryValue || l.code === deliveryValue);
         if (!location) {
           return NextResponse.json(
             { error: 'The specified delivery location does not exist at this party.' },
@@ -109,7 +121,7 @@ export async function POST(
     // Find locationId if delivery type is LOCATION
     let locationId: string | null = null;
     if (deliveryType === 'LOCATION') {
-      const location = party.locations.find(
+      const location = partyLocations.find(
         (l) => l.name === deliveryValue || l.code === deliveryValue
       );
       if (location) {
@@ -117,8 +129,10 @@ export async function POST(
       }
     }
 
-    const newRequest = await prisma.request.create({
-      data: {
+    const [newRequest] = await db
+      .insert(requests)
+      .values({
+        id: generateId(),
         partyId: party.id,
         category,
         item: body.item?.trim() || category,
@@ -127,14 +141,19 @@ export async function POST(
         deliveryValue,
         status: 'NEW',
         locationId,
-      },
-      include: { location: true },
+      })
+      .returning();
+
+    // Fetch with location relation for the response
+    const requestWithLocation = await db.query.requests.findFirst({
+      where: eq(requests.id, newRequest.id),
+      with: { location: true },
     });
 
     // Publish SSE event to host
-    sseEventBus.publish(party.id, 'new-request', newRequest);
+    sseEventBus.publish(party.id, 'new-request', requestWithLocation);
 
-    return NextResponse.json(newRequest, { status: 201 });
+    return NextResponse.json(requestWithLocation, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to submit request';
     return NextResponse.json({ error: message }, { status: 500 });

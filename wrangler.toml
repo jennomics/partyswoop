@@ -1,0 +1,7 @@
+name = "partyswoop"
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "partyswoop-db"
+database_id = "placeholder-replace-with-actual-id"

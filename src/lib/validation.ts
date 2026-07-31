@@ -1,4 +1,4 @@
-import { RequestStatus } from '@prisma/client';
+export type RequestStatus = 'NEW' | 'SEEN' | 'DONE';
 
 export type ValidationResult = { valid: true } | { valid: false; error: string };
 

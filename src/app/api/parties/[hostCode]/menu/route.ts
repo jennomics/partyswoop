@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, menuItems } from '@/lib/schema';
+import { generateId } from '@/lib/id';
+import { eq, asc } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
@@ -7,25 +10,28 @@ export async function GET(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const menuItems = await prisma.menuItem.findMany({
-      where: { partyId: party.id },
-      orderBy: { createdAt: 'asc' },
-    });
+    const items = await db
+      .select()
+      .from(menuItems)
+      .where(eq(menuItems.partyId, party.id))
+      .orderBy(asc(menuItems.createdAt));
 
-    return NextResponse.json(menuItems);
+    return NextResponse.json(items);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch menu items';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -38,20 +44,22 @@ export async function POST(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as Record<string, any>;
     const name = body.name?.trim();
 
     if (!name) {
@@ -61,14 +69,16 @@ export async function POST(
       );
     }
 
-    const menuItem = await prisma.menuItem.create({
-      data: {
+    const [menuItem] = await db
+      .insert(menuItems)
+      .values({
+        id: generateId(),
         partyId: party.id,
         name,
         category: 'DRINK',
         available: true,
-      },
-    });
+      })
+      .returning();
 
     return NextResponse.json(menuItem, { status: 201 });
   } catch (error) {

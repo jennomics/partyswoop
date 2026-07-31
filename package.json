@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",
-    "postinstall": "prisma generate"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply partyswoop-db"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "drizzle-orm": "^0.44.0",
     "nanoid": "^5.0.9",
     "next": "^16.2.12",
     "qrcode": "^1.5.4",
@@ -19,6 +20,8 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.0.0",
+    "@opennextjs/cloudflare": "^1.0.0",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",
@@ -27,10 +30,10 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
+    "drizzle-kit": "^0.30.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "postcss": "^8.4.49",
-    "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
     "ts-jest": "^29.4.12",
     "typescript": "^5.6.3"

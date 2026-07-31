@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, locations } from '@/lib/schema';
+import { generateId } from '@/lib/id';
 import { generateLocationCode } from '@/lib/codes';
+import { eq } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
@@ -8,24 +11,27 @@ export async function GET(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const locations = await prisma.location.findMany({
-      where: { partyId: party.id },
-    });
+    const partyLocations = await db
+      .select()
+      .from(locations)
+      .where(eq(locations.partyId, party.id));
 
-    return NextResponse.json(locations);
+    return NextResponse.json(partyLocations);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch locations';
     return NextResponse.json({ error: message }, { status: 500 });
@@ -38,20 +44,22 @@ export async function POST(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, guestCode: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, guestCode: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as Record<string, any>;
     const name = body.name?.trim();
 
     if (!name) {
@@ -67,22 +75,23 @@ export async function POST(
     for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
       const code = generateLocationCode(6);
       try {
-        location = await prisma.location.create({
-          data: {
+        const [inserted] = await db
+          .insert(locations)
+          .values({
+            id: generateId(),
             partyId: party.id,
             name,
             code,
-          },
-        });
+          })
+          .returning();
+        location = inserted;
         break;
       } catch (err: unknown) {
-        // Prisma unique constraint violation code
-        const isPrismaUniqueError =
-          err !== null &&
-          typeof err === 'object' &&
-          'code' in err &&
-          (err as { code: string }).code === 'P2002';
-        if (isPrismaUniqueError && attempt < MAX_CODE_ATTEMPTS - 1) {
+        // SQLite UNIQUE constraint error
+        const isUniqueError =
+          err instanceof Error &&
+          err.message.includes('UNIQUE constraint failed');
+        if (isUniqueError && attempt < MAX_CODE_ATTEMPTS - 1) {
           continue; // Retry with a new code
         }
         throw err;

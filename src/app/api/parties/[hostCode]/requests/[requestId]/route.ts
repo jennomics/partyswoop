@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, requests } from '@/lib/schema';
 import { sseEventBus } from '@/lib/sse';
 import { validateStatusTransition } from '@/lib/validation';
+import { eq, and } from 'drizzle-orm';
+import type { RequestStatus } from '@/lib/validation';
 
 export async function PATCH(
   request: Request,
@@ -9,38 +12,49 @@ export async function PATCH(
 ) {
   try {
     const { hostCode, requestId } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const existingRequest = await prisma.request.findFirst({
-      where: { id: requestId, partyId: party.id },
+    const existingRequest = await db.query.requests.findFirst({
+      where: and(eq(requests.id, requestId), eq(requests.partyId, party.id)),
     });
 
     if (!existingRequest) {
       return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
     }
 
-    const body = await request.json();
-    const validation = validateStatusTransition(existingRequest.status, body.status);
+    const body = await request.json() as Record<string, any>;
+    const validation = validateStatusTransition(
+      existingRequest.status as RequestStatus,
+      body.status
+    );
 
     if (!validation.valid) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const updatedRequest = await prisma.request.update({
-      where: { id: requestId },
-      data: { status: body.status },
-      include: { location: true },
+    const [updated] = await db
+      .update(requests)
+      .set({ status: body.status })
+      .where(eq(requests.id, requestId))
+      .returning();
+
+    // Fetch with location relation for the response
+    const updatedRequest = await db.query.requests.findFirst({
+      where: eq(requests.id, requestId),
+      with: { location: true },
     });
 
     // Publish SSE event

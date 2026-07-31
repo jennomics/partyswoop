@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, menuItems, locations, requests } from '@/lib/schema';
+import { eq, asc, desc } from 'drizzle-orm';
 
 /**
  * Security model for host endpoints:
@@ -22,12 +24,14 @@ export async function GET(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      include: {
-        menuItems: { orderBy: { createdAt: 'asc' } },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      with: {
+        menuItems: { orderBy: [asc(menuItems.createdAt)] },
         locations: true,
-        requests: { orderBy: { createdAt: 'desc' } },
+        requests: { orderBy: [desc(requests.createdAt)] },
       },
     });
 
@@ -35,7 +39,7 @@ export async function GET(
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 

@@ -1,5 +1,7 @@
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties } from '@/lib/schema';
 import { sseEventBus, SSE_HEARTBEAT_INTERVAL_MS } from '@/lib/sse';
+import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,9 +11,11 @@ export async function GET(
 ) {
   try {
     const { hostCode } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
@@ -21,7 +25,7 @@ export async function GET(
       });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return new Response(JSON.stringify({ error: 'This party has expired.' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' },

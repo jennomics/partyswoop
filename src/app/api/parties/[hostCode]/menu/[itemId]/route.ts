@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { getDb } from '@/lib/db';
+import { parties, menuItems } from '@/lib/schema';
 import { sseEventBus } from '@/lib/sse';
+import { eq, and } from 'drizzle-orm';
 
 export async function PATCH(
   request: Request,
@@ -8,28 +10,30 @@ export async function PATCH(
 ) {
   try {
     const { hostCode, itemId } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const existingItem = await prisma.menuItem.findFirst({
-      where: { id: itemId, partyId: party.id },
+    const existingItem = await db.query.menuItems.findFirst({
+      where: and(eq(menuItems.id, itemId), eq(menuItems.partyId, party.id)),
     });
 
     if (!existingItem) {
       return NextResponse.json({ error: 'Menu item not found.' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as Record<string, any>;
     const updateData: { name?: string; available?: boolean } = {};
 
     if (body.name !== undefined) {
@@ -44,10 +48,11 @@ export async function PATCH(
       updateData.available = Boolean(body.available);
     }
 
-    const updatedItem = await prisma.menuItem.update({
-      where: { id: itemId },
-      data: updateData,
-    });
+    const [updatedItem] = await db
+      .update(menuItems)
+      .set(updateData)
+      .where(eq(menuItems.id, itemId))
+      .returning();
 
     // Publish SSE event to notify connected guests
     sseEventBus.publish(party.id, 'menu-update', updatedItem);
@@ -65,28 +70,30 @@ export async function DELETE(
 ) {
   try {
     const { hostCode, itemId } = await params;
-    const party = await prisma.party.findUnique({
-      where: { hostCode },
-      select: { id: true, expiresAt: true },
+    const db = getDb();
+
+    const party = await db.query.parties.findFirst({
+      where: eq(parties.hostCode, hostCode),
+      columns: { id: true, expiresAt: true },
     });
 
     if (!party) {
       return NextResponse.json({ error: 'Party not found.' }, { status: 404 });
     }
 
-    if (new Date() > party.expiresAt) {
+    if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const existingItem = await prisma.menuItem.findFirst({
-      where: { id: itemId, partyId: party.id },
+    const existingItem = await db.query.menuItems.findFirst({
+      where: and(eq(menuItems.id, itemId), eq(menuItems.partyId, party.id)),
     });
 
     if (!existingItem) {
       return NextResponse.json({ error: 'Menu item not found.' }, { status: 404 });
     }
 
-    await prisma.menuItem.delete({ where: { id: itemId } });
+    await db.delete(menuItems).where(eq(menuItems.id, itemId));
 
     // Publish SSE event to notify connected guests
     sseEventBus.publish(party.id, 'menu-update', { deleted: itemId });
