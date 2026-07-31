@@ -1,5 +1,4 @@
 {
-  "url": "https://thoroughly-virtue-correlation-fancy.trycloudflare.com",
-  "startedAt": "2026-07-30T18:07:41.674Z",
-  "host": "LANGs-MacBook-Pro.local"
+  "url": null,
+  "stoppedAt": "2026-07-31T03:58:34.440Z"
 }
