@@ -4,4 +4,6 @@ compatibility_date = "2024-09-23"
 [[d1_databases]]
 binding = "DB"
 database_name = "partyswoop-db"
+# Replace this placeholder with the actual UUID from `wrangler d1 create partyswoop-db`.
+# The real database_id is deployment-specific and must be created before first deploy.
 database_id = "placeholder-replace-with-actual-id"

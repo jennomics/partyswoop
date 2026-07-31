@@ -8,6 +8,11 @@
  *
  * For this MVP, single-process deployment (e.g., `next start` on one container) is
  * the expected production topology.
+ *
+ * TODO: On Cloudflare Workers, each request runs in an isolated context with no
+ * shared memory. This singleton will not deliver events across requests. Replace
+ * with Durable Objects (one per party, holding WebSocket connections) or
+ * Cloudflare Pub/Sub for production Workers deployment.
  */
 
 type SSECallback = (eventType: string, data: unknown) => void;

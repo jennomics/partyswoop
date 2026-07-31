@@ -3,7 +3,6 @@ import { getDb } from '@/lib/db';
 import { parties, menuItems } from '@/lib/schema';
 import { generateId } from '@/lib/id';
 import { generatePartyCode } from '@/lib/codes';
-import { eq } from 'drizzle-orm';
 
 const DEFAULT_SUPPLIES = [
   'Toilet Paper',
@@ -28,31 +27,32 @@ export async function POST(request: Request) {
     const db = getDb();
     const partyId = generateId();
 
-    const [party] = await db
-      .insert(parties)
-      .values({
-        id: partyId,
-        name,
-        guestCode,
-        hostCode,
-        createdAt,
-        expiresAt,
-      })
-      .returning();
-
     const menuItemValues = DEFAULT_SUPPLIES.map((supplyName) => ({
       id: generateId(),
-      partyId: party.id,
+      partyId,
       name: supplyName,
       category: 'SUPPLY',
       available: true,
       createdAt,
     }));
 
-    const insertedItems = await db
-      .insert(menuItems)
-      .values(menuItemValues)
-      .returning();
+    // Use db.batch() to insert the party and its default menu items atomically.
+    // D1 batch executes all statements in a single transaction, preventing
+    // partial writes (e.g., party without menu items if the second insert fails).
+    const [partyResult, itemsResult] = await db.batch([
+      db.insert(parties).values({
+        id: partyId,
+        name,
+        guestCode,
+        hostCode,
+        createdAt,
+        expiresAt,
+      }).returning(),
+      db.insert(menuItems).values(menuItemValues).returning(),
+    ]);
+
+    const party = partyResult[0];
+    const insertedItems = itemsResult;
 
     return NextResponse.json({ ...party, menuItems: insertedItems }, { status: 201 });
   } catch (error) {

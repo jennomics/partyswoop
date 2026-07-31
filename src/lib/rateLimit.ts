@@ -3,6 +3,10 @@
  *
  * Like the SSE event bus, this is process-local and resets on restart.
  * For multi-instance deployments, replace with Redis-based rate limiting.
+ *
+ * TODO: On Cloudflare Workers, the in-memory Map resets per-isolate, making this
+ * effectively a no-op. Replace with Cloudflare's built-in Rate Limiting product,
+ * or a KV/D1-backed counter for production Workers deployment.
  */
 
 interface RateLimitEntry {
