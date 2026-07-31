@@ -1,11 +1,26 @@
 {
   "commands": [
     {
-      "id": "install-deps-001",
-      "command": "npm install",
-      "description": "Install node_modules after fresh clone"
+      "id": "d1-create",
+      "command": "npx wrangler d1 create partyswoop-db 2>&1 | tee /tmp/d1-create-output.txt",
+      "description": "Create the D1 database on Cloudflare"
+    },
+    {
+      "id": "d1-update-config",
+      "command": "D1_ID=$(grep 'database_id' /tmp/d1-create-output.txt | sed 's/.*= *\"\\(.*\\)\"/\\1/' | tr -d '\"' | tr -d ' ') && sed -i '' \"s/placeholder-replace-with-actual-id/$D1_ID/\" wrangler.toml && echo \"Updated wrangler.toml with database_id: $D1_ID\"",
+      "description": "Extract database_id from creation output and update wrangler.toml"
+    },
+    {
+      "id": "d1-migrate",
+      "command": "npx wrangler d1 migrations apply partyswoop-db --remote",
+      "description": "Apply database migration to create tables in D1"
+    },
+    {
+      "id": "d1-deploy",
+      "command": "npx wrangler deploy",
+      "description": "Redeploy the Worker with the D1 binding"
     }
   ],
-  "createdAt": "2026-07-30T18:00:00Z",
+  "createdAt": "2026-07-30T22:00:00Z",
   "source": "kiro"
 }
