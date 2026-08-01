@@ -6,6 +6,7 @@ import RequestQueue from '@/components/host/RequestQueue';
 import AudioAlert from '@/components/host/AudioAlert';
 import MenuManager from '@/components/host/MenuManager';
 import LocationManager from '@/components/host/LocationManager';
+import InventoryManager from '@/components/host/InventoryManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import Toast from '@/components/ui/Toast';
@@ -35,7 +36,7 @@ interface Location {
   code: string;
 }
 
-type Tab = 'requests' | 'menu' | 'locations';
+type Tab = 'requests' | 'menu' | 'inventory' | 'locations';
 
 export default function HostDashboard() {
   const params = useParams();
@@ -108,6 +109,7 @@ export default function HostDashboard() {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'requests', label: 'Requests' },
     { id: 'menu', label: 'Menu' },
+    { id: 'inventory', label: 'Inventory' },
     { id: 'locations', label: 'Locations' },
   ];
 
@@ -160,6 +162,9 @@ export default function HostDashboard() {
         )}
         {activeTab === 'menu' && (
           <MenuManager hostCode={hostCode} menuItems={party.menuItems} onUpdate={fetchParty} />
+        )}
+        {activeTab === 'inventory' && (
+          <InventoryManager hostCode={hostCode} />
         )}
         {activeTab === 'locations' && (
           <LocationManager hostCode={hostCode} guestCode={party.guestCode} locations={party.locations} onUpdate={fetchParty} />

@@ -34,7 +34,7 @@ export async function PATCH(
     }
 
     const body = await request.json() as Record<string, any>;
-    const updateData: { name?: string; available?: boolean } = {};
+    const updateData: { name?: string; available?: boolean; quantity?: number | null; lowStockThreshold?: number } = {};
 
     if (body.name !== undefined) {
       const name = body.name?.trim();
@@ -46,6 +46,16 @@ export async function PATCH(
 
     if (body.available !== undefined) {
       updateData.available = Boolean(body.available);
+    }
+
+    if (body.quantity !== undefined) {
+      updateData.quantity = body.quantity === null
+        ? null
+        : Math.max(0, Math.floor(Number(body.quantity)));
+    }
+
+    if (body.lowStockThreshold !== undefined) {
+      updateData.lowStockThreshold = Math.max(0, Math.floor(Number(body.lowStockThreshold)));
     }
 
     const [updatedItem] = await db

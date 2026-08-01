@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { parties, requests } from '@/lib/schema';
+import { parties, requests, menuItems } from '@/lib/schema';
 import { sseEventBus } from '@/lib/sse';
 import { validateStatusTransition } from '@/lib/validation';
 import { eq, and } from 'drizzle-orm';
@@ -50,6 +50,44 @@ export async function PATCH(
       .set({ status: body.status })
       .where(eq(requests.id, requestId))
       .returning();
+
+    // Auto-decrement inventory when a DRINK or SUPPLY request is marked DONE
+    if (
+      body.status === 'DONE' &&
+      (existingRequest.category === 'DRINK' || existingRequest.category === 'SUPPLY')
+    ) {
+      const matchingItem = await db.query.menuItems.findFirst({
+        where: and(
+          eq(menuItems.partyId, party.id),
+          eq(menuItems.name, existingRequest.item)
+        ),
+      });
+
+      if (matchingItem && matchingItem.quantity !== null && matchingItem.quantity > 0) {
+        const newQuantity = matchingItem.quantity - 1;
+        const updateData: { quantity: number; available?: boolean } = { quantity: newQuantity };
+
+        if (newQuantity === 0) {
+          updateData.available = false;
+        }
+
+        const [updatedItem] = await db
+          .update(menuItems)
+          .set(updateData)
+          .where(eq(menuItems.id, matchingItem.id))
+          .returning();
+
+        // Publish inventory-update SSE event
+        sseEventBus.publish(party.id, 'inventory-update', {
+          ...updatedItem,
+          isLowStock:
+            updatedItem.quantity !== null &&
+            updatedItem.quantity > 0 &&
+            updatedItem.quantity <= updatedItem.lowStockThreshold,
+          isOutOfStock: updatedItem.quantity !== null && updatedItem.quantity === 0,
+        });
+      }
+    }
 
     // Fetch with location relation for the response
     const updatedRequest = await db.query.requests.findFirst({

@@ -69,14 +69,20 @@ export async function POST(
       );
     }
 
+    const category = body.category === 'SUPPLY' ? 'SUPPLY' : 'DRINK';
+    const quantity = body.quantity !== undefined && body.quantity !== null
+      ? Math.max(0, Math.floor(Number(body.quantity)))
+      : null;
+
     const [menuItem] = await db
       .insert(menuItems)
       .values({
         id: generateId(),
         partyId: party.id,
         name,
-        category: 'DRINK',
+        category,
         available: true,
+        quantity,
       })
       .returning();
 

@@ -24,6 +24,8 @@ export const menuItems = sqliteTable(
     name: text('name').notNull(),
     available: integer('available', { mode: 'boolean' }).notNull().default(true),
     category: text('category').notNull(),
+    quantity: integer('quantity'),
+    lowStockThreshold: integer('low_stock_threshold').notNull().default(3),
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),
