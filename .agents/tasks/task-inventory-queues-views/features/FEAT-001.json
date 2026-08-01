@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Inventory tracking system for the host - add quantity column to menu_items, create inventory management page, auto-decrement stock when fulfilling requests, show low-stock alerts.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add a `quantity` integer column (nullable, null means unlimited/not tracked) to the `menuItems` table in src/lib/schema.ts. Add a `lowStockThreshold` integer column (default 3) to support configurable low-stock alerts per item.",
     "Create a new SQL migration file at migrations/0002_inventory.sql that adds the `quantity` and `low_stock_threshold` columns to the `menu_items` table using ALTER TABLE.",
@@ -28,5 +28,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and tests pass. The guest-facing API at /api/party/[guestCode] already filters by available=true so auto-disabling items at quantity 0 works seamlessly. The menu POST route was also updated to accept category in the body (previously hardcoded to DRINK). The inventory-update SSE event is published with computed isLowStock and isOutOfStock fields."
 }
