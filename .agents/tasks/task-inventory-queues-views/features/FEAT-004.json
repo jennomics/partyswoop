@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Supply request queue visible to guests - guests can see what supplies have been requested, where their request stands in line, where supplies have been or will be delivered, who is delivering (host name by default), and status.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Create a new guest API route at src/app/api/party/[guestCode]/requests/supplies/route.ts that returns all SUPPLY-category requests for the party, ordered by createdAt ascending (FIFO queue). Include fields: id, item, deliveryType, deliveryValue, status, createdAt, location (from relation). Also return the party name (as the default 'deliverer' since host name is the party name).",
     "Create a new guest component at src/components/guest/SupplyQueue.tsx that displays the supply request queue with sections: (1) 'Being Delivered' - SEEN requests showing item, delivery destination (location name or person name), and 'Delivered by: [party name]', (2) 'In Queue' - NEW requests showing position, item, and destination, (3) 'Delivered' - DONE requests. Highlight the current user's request(s) with a distinct visual style showing their queue position.",
@@ -26,5 +26,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and tests pass. Supply queue API at /api/party/[guestCode]/requests/supplies returns SUPPLY-category requests with location join and partyName. SupplyQueue component shows Being Delivered (SEEN), In Queue (NEW with position numbers), and Delivered (DONE) sections. Highlights current user's requests via myRequestIds prop. SSE events (request-update, new-request) drive real-time updates. Supply queue accessible from category selection screen via subtle link and shown below RequestTracker after supply submission."
 }
