@@ -3,31 +3,61 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --paper: #F6F5F1;
+    --rule: #E6E4DC;
+    --live: #A8512C;
+    --ink: #1C1C1A;
+    --ink-72: rgb(28 28 26 / .72);
+    --ink-50: rgb(28 28 26 / .50);
+    --ink-35: rgb(28 28 26 / .35);
+    --live-wash: #F1E6E0;
+    --s-1: 8px;
+    --s-2: 16px;
+    --s-3: 24px;
+    --s-4: 40px;
+    --s-5: 64px;
+    --s-6: 104px;
+    --radius: 0;
+    --target-min: 44px;
+    --dur-fast: 180ms;
+    --dur: 240ms;
+    --ease: cubic-bezier(.2, .6, .3, 1);
+  }
+
   body {
-    @apply bg-white text-gray-900 antialiased;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-zen), 'Zen Kaku Gothic New', sans-serif;
+    @apply antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
   }
 }
 
 @layer utilities {
-  .animate-pulse-once {
-    animation: pulse-once 1s ease-in-out;
-  }
-
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-}
-
-@keyframes pulse-once {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
 }
 
 @media print {
   body > *:not(.print-view) {
     display: none !important;
   }
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
   .print-view {

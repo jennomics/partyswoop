@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "refactor",
+  "description": "Restyle all guest components (DrinkRequest, SupplyRequest, SongRequest, OtherRequest, RequestTracker, SongQueue, SupplyQueue) to follow the One Filled Thing style guide. Active/current items get the Live fill block. Everything else is ruled rows. No emoji, no rounded corners, no shadows, no colored fills.",
+  "status": "pending",
+  "steps": [
+    "Restyle src/components/guest/DrinkRequest.tsx: Remove emoji from drink list items. Drink selection buttons become ruled rows (1px rule border-bottom, full width, left-aligned text, 44px+ height). Remove rounded-lg, border-blue-400 hover, shadow-sm, active:scale. Selected state (delivery type) uses 1.5px ink border-left instead of blue border + blue fill. Input fields use underline style (border-bottom 1px rule). Submit button is primary (1.5px live outline, live text, 48px, no fill). Remove bg-blue-50 selected states.",
+    "Restyle src/components/guest/SupplyRequest.tsx: Remove emoji from supply items. Items become ruled rows (1px rule border-bottom, left-aligned, 44px+). Remove rounded-lg, border-blue-400 hover, shadow-sm. Heading in zen 500. Subtext at ink-50.",
+    "Restyle src/components/guest/SongRequest.tsx: Input uses underline style. Submit button is primary (1.5px live outline, 48px). Heading in zen 500. Remove rounded-lg, bg-blue-600, focus:border-blue-500.",
+    "Restyle src/components/guest/OtherRequest.tsx: Same pattern as SongRequest. Underline input, primary outline button, zen heading.",
+    "Restyle src/components/guest/RequestTracker.tsx: Remove CATEGORY_ICONS emoji map. Remove colored progress circles (bg-blue-500, bg-yellow-400, shadow-lg). Progress tracker becomes three text labels in a row separated by 1px rule lines. Current step gets Live color text. Completed steps get ink. Future steps get ink-35. The status message box: remove rounded-lg, bg-white, colored text. For NEW status: plain ink-72 text. For SEEN status: this is the active thing, so it gets the Live block fill (solid bg-live, white text). For DONE: ink-35 text. Remove animate-bounce, shadow-lg, shadow-yellow-200.",
+    "Restyle src/components/guest/SongQueue.tsx: Remove all emoji. 'Now Playing' item: if status is NEW/SEEN (active), it gets the Live block fill (bg-live, white text). Queue items are ruled rows with position number in mono. 'You' indicator is plain mono text at ink-50, not a colored pill/badge. Remove rounded-lg, rounded-full, bg-blue-100/text-blue-700 badges, bg-blue-50 fills. Already-played items use ink-35 with line-through. Remove opacity-60 class (use ink-35 instead).",
+    "Restyle src/components/guest/SupplyQueue.tsx: Remove all emoji. Being-delivered items: these are active, get the Live block fill (bg-live, white text). In-queue items are ruled rows with position in mono. Remove rounded-lg, rounded-full, bg-green-100/400 fills/borders. 'You' indicator is mono text at ink-50. Delivered items use ink-35. Remove opacity-60."
+  ],
+  "acceptance_criteria": [
+    "Zero emoji in any guest component file",
+    "Zero instances of rounded-*, shadow-*, bg-blue-*, bg-green-*, bg-yellow-*, bg-red-* in guest components",
+    "Active/current items render with bg-live solid fill and white text",
+    "All other items use ruled-row pattern with ink text",
+    "Interactive targets are at least 44px",
+    "Position numbers and status text use mono font",
+    "npm run build succeeds"
+  ],
+  "verification": [
+    "npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

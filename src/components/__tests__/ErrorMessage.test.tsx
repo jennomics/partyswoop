@@ -14,12 +14,12 @@ describe('ErrorMessage', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
-  it('is styled with red colors for visibility', () => {
+  it('is styled with design system tokens', () => {
     const { container } = render(<ErrorMessage message="Error occurred" />);
     const alertDiv = container.querySelector('[role="alert"]');
-    expect(alertDiv).toHaveClass('bg-red-50');
-    expect(alertDiv).toHaveClass('border-red-200');
-    expect(alertDiv).toHaveClass('text-red-800');
+    expect(alertDiv).toHaveClass('border-t');
+    expect(alertDiv).toHaveClass('border-rule');
+    expect(alertDiv).toHaveClass('text-ink-72');
   });
 
   it('renders nothing when message is empty', () => {

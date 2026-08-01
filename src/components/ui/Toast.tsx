@@ -9,29 +9,23 @@ interface ToastProps {
   duration?: number;
 }
 
-export default function Toast({ message, type = 'success', onDismiss, duration = 3000 }: ToastProps) {
+export default function Toast({ message, onDismiss, duration = 3000 }: ToastProps) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
-      setTimeout(onDismiss, 300);
+      setTimeout(onDismiss, 240);
     }, duration);
     return () => clearTimeout(timer);
   }, [duration, onDismiss]);
 
-  const bgColors = {
-    success: 'bg-green-600',
-    error: 'bg-red-600',
-    info: 'bg-blue-600',
-  };
-
   return (
     <div
-      className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-3 text-white shadow-lg transition-opacity duration-300 ${bgColors[type]} ${visible ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t border-rule bg-paper px-4 py-3 transition-opacity duration-[var(--dur)] ease-[var(--ease)] safe-area-pb ${visible ? 'opacity-100' : 'opacity-0'}`}
       role="status"
     >
-      <p className="text-sm font-medium">{message}</p>
+      <p className="text-body text-ink text-center">{message}</p>
     </div>
   );
 }

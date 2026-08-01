@@ -1,0 +1,7 @@
+{
+  "task_id": "task-one-filled-thing-redesign",
+  "task_description": "Apply the 'One Filled Thing' style guide to the entire PartySwoop app. Complete visual overhaul replacing all rounded corners, colored fills, shadows, emoji, tinted panels, and colored badges with a minimal ruled-row system. Only one element per screen gets a color fill (the active/new request). Everything else uses ink, 1px rules, and space.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}
