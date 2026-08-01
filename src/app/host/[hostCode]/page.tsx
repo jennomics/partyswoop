@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import RequestQueue from '@/components/host/RequestQueue';
+import RequestViews from '@/components/host/RequestViews';
 import AudioAlert from '@/components/host/AudioAlert';
 import MenuManager from '@/components/host/MenuManager';
 import LocationManager from '@/components/host/LocationManager';
@@ -36,7 +37,7 @@ interface Location {
   code: string;
 }
 
-type Tab = 'requests' | 'menu' | 'inventory' | 'locations';
+type Tab = 'requests' | 'views' | 'menu' | 'inventory' | 'locations';
 
 export default function HostDashboard() {
   const params = useParams();
@@ -108,6 +109,7 @@ export default function HostDashboard() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'requests', label: 'Requests' },
+    { id: 'views', label: 'Views' },
     { id: 'menu', label: 'Menu' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'locations', label: 'Locations' },
@@ -159,6 +161,9 @@ export default function HostDashboard() {
       <div className="max-w-2xl mx-auto p-4">
         {activeTab === 'requests' && (
           <RequestQueue hostCode={hostCode} />
+        )}
+        {activeTab === 'views' && (
+          <RequestViews hostCode={hostCode} />
         )}
         {activeTab === 'menu' && (
           <MenuManager hostCode={hostCode} menuItems={party.menuItems} onUpdate={fetchParty} />
