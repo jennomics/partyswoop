@@ -292,25 +292,23 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         </div>
       ) : (
         <>
-          {/* Category list - ruled rows */}
-          <div className="border-t border-rule">
+          {/* Category grid - 2x2 bordered panels */}
+          <div className="grid grid-cols-2 gap-4">
             {groupedRequests.map((group) => (
               <button
                 key={group.category}
                 type="button"
                 onClick={() => setSelectedCategory(group.category)}
-                className="w-full flex items-center justify-between p-s-2 border-b border-rule min-h-[44px] text-left"
+                className="border border-rule p-4 min-h-[120px] text-left flex flex-col"
                 aria-label={`${CATEGORY_LABELS[group.category]} - ${group.items.length} requests. Tap to view.`}
               >
-                <span className={`text-list font-zen ${
-                  group.items.length > 0 ? 'text-ink' : 'text-ink-35'
-                }`}>
-                  {CATEGORY_LABELS[group.category]}
+                <span className="font-mono text-meta text-ink-50 uppercase">
+                  {CATEGORY_LABELS[group.category].toUpperCase()}
                 </span>
-                <span className={`font-mono text-body ${
+                <span className={`font-mono text-h2 mt-2 ${
                   group.items.length > 0 ? 'text-ink' : 'text-ink-35'
                 }`}>
-                  {group.items.length}
+                  {group.items.length > 0 ? group.items.length : 'None'}
                 </span>
               </button>
             ))}
