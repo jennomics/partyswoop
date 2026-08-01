@@ -240,6 +240,10 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
           const seenCount = groupReqs.filter((r) => r.status === 'SEEN').length;
           const doneCount = groupReqs.filter((r) => r.status === 'DONE').length;
 
+          // Only the most recent NEW request in the group gets bg-live fill
+          const sortedGroupReqs = [...groupReqs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          const newestNewInGroup = sortedGroupReqs.find((r) => r.status === 'NEW')?.id ?? null;
+
           return (
             <div key={groupKey} className="border-b border-rule">
               <button
@@ -286,58 +290,66 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
                   aria-label={`Requests for ${groupKey}`}
                   className="border-t border-rule"
                 >
-                  {groupReqs
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((req) => (
-                      <div
-                        key={req.id}
-                        className={`flex items-center gap-3 px-s-2 py-2 border-b border-rule last:border-b-0 min-h-[44px] ${
-                          req.status === 'NEW' ? 'bg-live text-white' : ''
-                        }`}
-                      >
-                        <span className={`font-mono text-meta uppercase ${
-                          req.status === 'NEW' ? 'text-white/70' : 'text-ink-50'
-                        }`} aria-label={req.category}>
-                          {req.category}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-list font-zen truncate ${
-                              req.status === 'NEW' ? 'text-white' :
-                              req.status === 'DONE' ? 'text-ink-35 line-through' : 'text-ink'
-                            }`}>{req.item}</span>
-                            <span className={`font-mono text-meta ${
-                              req.status === 'NEW' ? 'text-white/70' :
-                              req.status === 'DONE' ? 'text-ink-35' : 'text-ink-72'
-                            }`}>
-                              {req.status.toLowerCase()}
-                            </span>
-                          </div>
-                          <div className={`font-mono text-meta mt-0.5 ${
-                            req.status === 'NEW' ? 'text-white/70' : 'text-ink-35'
-                          }`}>
-                            {groupBy !== 'guest' && req.deliveryType === 'NAME' && (
-                              <span>{req.deliveryValue} / </span>
-                            )}
-                            {groupBy !== 'location' && (
-                              <span>
-                                {req.deliveryType === 'LOCATION'
-                                  ? `${req.location?.name || req.deliveryValue}`
-                                  : ''}{' '}
+                  {sortedGroupReqs.map((req) => {
+                      const isNewestNew = req.id === newestNewInGroup;
+                      const isNew = req.status === 'NEW';
+
+                      return (
+                        <div
+                          key={req.id}
+                          className={`flex items-center gap-3 px-s-2 py-2 border-b border-rule last:border-b-0 min-h-[44px] ${
+                            isNewestNew
+                              ? 'bg-live text-white'
+                              : isNew
+                                ? 'border-l-[1.5px] border-l-live'
+                                : ''
+                          }`}
+                        >
+                          <span className={`font-mono text-meta uppercase ${
+                            isNewestNew ? 'text-white/70' : 'text-ink-50'
+                          }`} aria-label={req.category}>
+                            {req.category}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-list font-zen truncate ${
+                                isNewestNew ? 'text-white' :
+                                isNew ? 'text-ink font-medium' :
+                                req.status === 'DONE' ? 'text-ink-35 line-through' : 'text-ink'
+                              }`}>{req.item}</span>
+                              <span className={`font-mono text-meta ${
+                                isNewestNew ? 'text-white/70' :
+                                req.status === 'DONE' ? 'text-ink-35' : 'text-ink-72'
+                              }`}>
+                                {req.status.toLowerCase()}
                               </span>
-                            )}
-                            <span>{timeAgo(req.createdAt)}</span>
-                          </div>
-                          {req.note && (
-                            <p className={`text-meta mt-0.5 truncate ${
-                              req.status === 'NEW' ? 'text-white/70' : 'text-ink-35'
+                            </div>
+                            <div className={`font-mono text-meta mt-0.5 ${
+                              isNewestNew ? 'text-white/70' : 'text-ink-35'
                             }`}>
-                              Note: {req.note}
-                            </p>
-                          )}
+                              {groupBy !== 'guest' && req.deliveryType === 'NAME' && (
+                                <span>{req.deliveryValue} / </span>
+                              )}
+                              {groupBy !== 'location' && (
+                                <span>
+                                  {req.deliveryType === 'LOCATION'
+                                    ? `${req.location?.name || req.deliveryValue}`
+                                    : ''}{' '}
+                                </span>
+                              )}
+                              <span>{timeAgo(req.createdAt)}</span>
+                            </div>
+                            {req.note && (
+                              <p className={`text-meta mt-0.5 truncate ${
+                                isNewestNew ? 'text-white/70' : 'text-ink-35'
+                              }`}>
+                                Note: {req.note}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               )}
             </div>

@@ -173,7 +173,7 @@ export default function GuestPage() {
             <button
               key={cat.id}
               onClick={() => setActiveSheet(cat.id)}
-              className="w-full flex items-center h-11 border-b border-rule text-body text-ink text-left hover:bg-live-wash focus:outline-none focus:ring-1 focus:ring-ink"
+              className="w-full flex items-center h-11 border-b border-rule text-body text-ink text-left focus:outline-none focus:ring-1 focus:ring-ink"
               aria-label={`Request ${cat.label.toLowerCase()}`}
             >
               <span>{cat.label}</span>

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 
 interface ToastProps {
   message: string;
-  type?: 'success' | 'error' | 'info';
   onDismiss: () => void;
   duration?: number;
 }

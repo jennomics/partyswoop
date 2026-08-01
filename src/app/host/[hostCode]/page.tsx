@@ -127,7 +127,7 @@ export default function HostDashboard() {
           <div className="flex items-center gap-s-1 shrink-0">
             <button
               onClick={copyGuestLink}
-              className="h-12 px-s-2 border border-ink text-ink text-meta font-mono uppercase tracking-wide hover:bg-live-wash focus:outline-none focus:ring-1 focus:ring-ink"
+              className="h-12 px-s-2 border border-ink text-ink text-meta font-mono uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-ink"
             >
               {copied ? 'Copied' : 'Share link'}
             </button>
@@ -178,7 +178,7 @@ export default function HostDashboard() {
         </div>
       </nav>
 
-      {toast && <Toast message={toast} type="info" onDismiss={() => setToast('')} />}
+      {toast && <Toast message={toast} onDismiss={() => setToast('')} />}
     </main>
   );
 }

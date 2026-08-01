@@ -138,37 +138,43 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
     items: activeRequests.filter((r) => r.category === cat),
   }));
 
+  // Determine which NEW request is the most recent (the one filled thing)
+  const newestNewId = activeRequests.find((r) => r.status === 'NEW')?.id ?? null;
+
   function renderRequestRow(req: RequestItem) {
     const isNew = req.status === 'NEW';
     const isSeen = req.status === 'SEEN';
+    const isNewestNew = req.id === newestNewId;
 
     return (
       <div
         key={req.id}
         className={`flex items-center justify-between gap-2 p-s-2 min-h-[44px] ${
-          isNew
-            ? 'bg-live text-white'
-            : 'border-b border-rule'
+          isNewestNew
+            ? 'bg-live text-white border-b border-white/20'
+            : isNew
+              ? 'border-l-[1.5px] border-l-live border-b border-rule'
+              : 'border-b border-rule'
         }`}
       >
         <div className="flex flex-col min-w-0 flex-1">
-          <span className={`truncate text-list font-zen ${isNew ? 'text-white font-medium' : 'text-ink'}`}>
+          <span className={`truncate text-list font-zen ${isNewestNew ? 'text-white font-medium' : isNew ? 'text-ink font-medium' : 'text-ink'}`}>
             {req.item}
           </span>
-          <span className={`font-mono text-meta truncate ${isNew ? 'text-white/70' : 'text-ink-50'}`}>
+          <span className={`font-mono text-meta truncate ${isNewestNew ? 'text-white/70' : 'text-ink-50'}`}>
             {req.deliveryType === 'LOCATION' && req.location
               ? req.location.name
               : req.deliveryValue}
             {' / '}{timeAgo(req.createdAt)}
           </span>
           {req.note && (
-            <span className={`text-meta truncate mt-0.5 ${isNew ? 'text-white/70' : 'text-ink-35'}`}>
+            <span className={`text-meta truncate mt-0.5 ${isNewestNew ? 'text-white/70' : 'text-ink-35'}`}>
               &quot;{req.note}&quot;
             </span>
           )}
         </div>
         <div className="flex gap-2 shrink-0">
-          {isNew && (
+          {isNew && isNewestNew && (
             <>
               <button
                 onClick={() => updateStatus(req.id, 'SEEN')}
@@ -180,6 +186,24 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
               <button
                 onClick={() => updateStatus(req.id, 'DONE')}
                 className="border-[1.5px] border-white text-white font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
+                aria-label={`Mark ${req.item} as done`}
+              >
+                Done
+              </button>
+            </>
+          )}
+          {isNew && !isNewestNew && (
+            <>
+              <button
+                onClick={() => updateStatus(req.id, 'SEEN')}
+                className="border border-ink text-ink font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
+                aria-label={`Mark ${req.item} as seen`}
+              >
+                Seen
+              </button>
+              <button
+                onClick={() => updateStatus(req.id, 'DONE')}
+                className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
                 aria-label={`Mark ${req.item} as done`}
               >
                 Done

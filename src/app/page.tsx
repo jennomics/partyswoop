@@ -64,7 +64,7 @@ export default function HomePage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 border-[1.5px] border-live text-live text-body font-medium hover:bg-live-wash disabled:border-ink-35 disabled:text-ink-35 focus:outline-none focus:ring-1 focus:ring-ink"
+            className="w-full h-12 border-[1.5px] border-live text-live text-body font-medium disabled:border-ink-35 disabled:text-ink-35 focus:outline-none focus:ring-1 focus:ring-ink"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-s-1">
