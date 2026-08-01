@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Host request views with filtering and grouping - host can see all requests filtered/grouped by guest (deliveryValue when NAME), location, or item.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Create a new host component at src/components/host/RequestViews.tsx that provides three views/groupings of requests: (1) By Guest - groups requests by deliveryValue (when deliveryType is NAME, the deliveryValue IS the guest name), (2) By Location - groups requests by location name (using the location relation), (3) By Item - groups requests by the item field. Each group shows a count and expandable list of requests with their status. Include filter controls for status (NEW/SEEN/DONE/ALL) and category (DRINK/SUPPLY/SONG/OTHER/ALL).",
     "The component should fetch from the existing GET /api/parties/[hostCode]/requests endpoint (which already returns all requests with location relation) and perform client-side grouping/filtering for responsiveness.",
@@ -24,5 +24,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and tests pass. The Views tab was added between Requests and Menu in the host dashboard. The component uses client-side grouping/filtering for responsiveness, supports SSE real-time updates, and uses ARIA tabpanel roles with keyboard navigation (arrow keys) for the group-by tab switcher."
 }
