@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "refactor",
   "description": "Restyle all host components (RequestQueue, RequestViews, MenuManager, InventoryManager, LocationManager, AudioAlert, FridgeScan, QRPrintView, ReviewDraftModal) to follow the One Filled Thing style guide. The key rule: NEW requests get the Live fill block (bg-[#A8512C] with white text), everything else is ruled rows with ink and space. No emoji, no rounded corners, no shadows, no colored badges, no tinted panels.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Restyle src/components/host/RequestQueue.tsx: Remove CATEGORY_ICONS emoji map entirely. Category tile grid becomes a list of ruled rows (1px rule border-bottom separating each category heading with its count in mono). Remove rounded-xl, bg-white border-2, shadow-sm, dashed borders. Request rows with status NEW get the Live block treatment: full-width solid bg-live (#A8512C) fill with white text (this is THE one filled thing). SEEN requests are plain ruled rows. DONE requests show ink-35 text with line-through. Action buttons: 'Seen' is secondary (1px ink outline, 48px), 'Done' is primary (1.5px live outline, 48px). Remove bg-blue-50, bg-yellow-500, bg-green-500 button fills. Count badges become plain mono numerals, no colored pill backgrounds. The expand/collapse toggle uses ink text, no animated rotation.",
     "Restyle src/components/host/RequestViews.tsx: Remove group-by tab bar with rounded-xl/bg-blue-600 active state. Replace with ruled underline tabs (current tab has 1.5px ink underline). Remove STATUS_COLORS map with colored badges. Status indicators become mono text at appropriate ink opacities (NEW at 100%, SEEN at 72%, DONE at 35%). Filter selects use underline style (no box, no rounded-lg). Group containers: remove rounded-xl border-2 bg-white. Use ruled rows with 1px rule separators. Expand/collapse uses ink arrow. Remove all emoji from category display. Counts in mono font.",
@@ -27,5 +27,5 @@
     "npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 9 host components restyled. The only rounded-full usage is for 6px state dots (required by the design system). Build and all 53 tests pass."
 }
