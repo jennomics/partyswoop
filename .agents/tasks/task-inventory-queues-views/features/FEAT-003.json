@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Song request queue visible to guests - guests can see the full queue of song requests: what has played (DONE), where their request stands in line (position number), what has been requested and by whom. First-come-first-served ordering by createdAt.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create a new guest API route at src/app/api/party/[guestCode]/requests/songs/route.ts that returns all SONG-category requests for the party, ordered by createdAt ascending (FIFO queue). Include fields: id, item (song name), deliveryValue (requester name since songs use NAME delivery), status, createdAt. This gives guests visibility into the full song queue.",
     "Create a new guest component at src/components/guest/SongQueue.tsx that displays the song request queue with three sections: (1) 'Now Playing / Up Next' - the oldest NEW or SEEN request, (2) 'In Queue' - remaining NEW/SEEN requests showing position numbers and requester names, (3) 'Already Played' - DONE requests in reverse order. Highlight the current user's request(s) with a distinct style and show their queue position.",

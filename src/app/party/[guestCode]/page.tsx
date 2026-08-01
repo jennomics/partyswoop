@@ -7,6 +7,7 @@ import SupplyRequest from '@/components/guest/SupplyRequest';
 import SongRequest from '@/components/guest/SongRequest';
 import OtherRequest from '@/components/guest/OtherRequest';
 import RequestTracker from '@/components/guest/RequestTracker';
+import SongQueue from '@/components/guest/SongQueue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -31,6 +32,7 @@ interface PartyData {
 }
 
 type Category = 'drink' | 'supply' | 'song' | 'other' | null;
+type View = 'main' | 'songQueue';
 
 interface SubmittedRequest {
   id: string;
@@ -50,6 +52,8 @@ export default function GuestPage() {
   const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category>(null);
   const [submittedRequest, setSubmittedRequest] = useState<SubmittedRequest | null>(null);
+  const [currentView, setCurrentView] = useState<View>('main');
+  const [myRequestIds, setMyRequestIds] = useState<string[]>([]);
 
   const fetchParty = useCallback(async () => {
     try {
@@ -76,6 +80,9 @@ export default function GuestPage() {
 
   function handleRequestSubmitted(request: SubmittedRequest) {
     setSubmittedRequest(request);
+    if (request.category === 'SONG') {
+      setMyRequestIds((prev) => [...prev, request.id]);
+    }
   }
 
   function handleBack() {
@@ -103,6 +110,24 @@ export default function GuestPage() {
     );
   }
 
+  // Show song queue view
+  if (currentView === 'songQueue') {
+    return (
+      <main className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-sm mx-auto">
+          <button
+            onClick={() => setCurrentView('main')}
+            className="text-sm text-blue-600 hover:text-blue-800 mb-4"
+          >
+            &larr; Back
+          </button>
+          <h2 className="text-xl font-bold mb-4">Song Queue</h2>
+          <SongQueue guestCode={guestCode} myRequestIds={myRequestIds} />
+        </div>
+      </main>
+    );
+  }
+
   // Show request tracker if a request was submitted
   if (submittedRequest) {
     return (
@@ -115,6 +140,11 @@ export default function GuestPage() {
             note={submittedRequest.note}
             category={submittedRequest.category}
           />
+          {submittedRequest.category === 'SONG' && (
+            <div className="mt-6">
+              <SongQueue guestCode={guestCode} myRequestIds={myRequestIds} />
+            </div>
+          )}
           <button
             onClick={handleNewRequest}
             className="w-full mt-6 rounded-lg border border-gray-300 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
@@ -235,6 +265,14 @@ export default function GuestPage() {
             <span className="font-medium">Other</span>
           </button>
         </div>
+
+        <button
+          onClick={() => setCurrentView('songQueue')}
+          className="mt-6 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+          aria-label="View song request queue"
+        >
+          🎵 View Song Queue
+        </button>
       </div>
     </main>
   );
