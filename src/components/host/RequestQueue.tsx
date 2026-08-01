@@ -301,19 +301,20 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
                   key={group.category}
                   type="button"
                   onClick={() => setSelectedCategory(group.category)}
-                  className="border border-rule p-4 min-h-[120px] text-left flex flex-col"
+                  className={`p-4 min-h-[120px] text-left flex flex-col ${
+                    hasNew
+                      ? 'bg-live border border-live'
+                      : 'border border-rule'
+                  }`}
                   aria-label={`${CATEGORY_LABELS[group.category]} - ${group.items.length} requests${hasNew ? ', new requests pending' : ''}. Tap to view.`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-meta text-ink-50 uppercase">
-                      {CATEGORY_LABELS[group.category].toUpperCase()}
-                    </span>
-                    {hasNew && (
-                      <span className="w-[6px] h-[6px] rounded-full bg-live" aria-label="New requests pending" />
-                    )}
-                  </div>
+                  <span className={`font-mono text-meta uppercase ${
+                    hasNew ? 'text-white/70' : 'text-ink-50'
+                  }`}>
+                    {CATEGORY_LABELS[group.category].toUpperCase()}
+                  </span>
                   <span className={`font-mono text-h2 mt-2 ${
-                    hasNew ? 'text-live' : group.items.length > 0 ? 'text-ink' : 'text-ink-35'
+                    hasNew ? 'text-white' : group.items.length > 0 ? 'text-ink' : 'text-ink-35'
                   }`}>
                     {group.items.length > 0 ? group.items.length : 'None'}
                   </span>
