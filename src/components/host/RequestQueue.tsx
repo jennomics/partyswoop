@@ -145,65 +145,65 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
     }))
     .filter((group) => group.items.length > 0);
 
-  function renderRequestCard(req: RequestItem) {
+  function renderRequestRow(req: RequestItem) {
     return (
       <div
         key={req.id}
-        className={`rounded-xl border-2 p-4 transition-all ${
+        className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all ${
           req.status === 'NEW'
-            ? 'border-blue-300 bg-white shadow-sm'
-            : 'border-gray-200 bg-white'
+            ? 'bg-blue-50 border border-blue-200'
+            : 'bg-gray-50 border border-gray-100'
         }`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{CATEGORY_ICONS[req.category]}</span>
-              <span className="font-medium truncate">{req.item}</span>
-            </div>
-            {req.note && (
-              <p className="text-sm text-gray-600 ml-7">Note: {req.note}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm truncate">{req.item}</span>
+            {req.status === 'NEW' && (
+              <span className="shrink-0 w-2 h-2 rounded-full bg-blue-500" aria-label="New request" />
             )}
-            <p className="text-sm text-gray-500 ml-7">
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+            <span className="truncate">
               {req.deliveryType === 'LOCATION'
                 ? `📍 ${req.location?.name || req.deliveryValue}`
                 : `👤 ${req.deliveryValue}`}
-            </p>
-            <p className="text-xs text-gray-400 ml-7 mt-1">{timeAgo(req.createdAt)}</p>
+            </span>
+            {req.note && <span className="truncate text-gray-400">· {req.note}</span>}
+            <span className="shrink-0 text-gray-400">{timeAgo(req.createdAt)}</span>
           </div>
-          <div className="flex gap-2 shrink-0">
-            {req.status === 'NEW' && (
-              <>
-                <button
-                  onClick={() => updateStatus(req.id, 'SEEN')}
-                  className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
-                >
-                  Seen
-                </button>
-                <button
-                  onClick={() => updateStatus(req.id, 'DONE')}
-                  className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
-                >
-                  Done
-                </button>
-              </>
-            )}
-            {req.status === 'SEEN' && (
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          {req.status === 'NEW' && (
+            <>
+              <button
+                onClick={() => updateStatus(req.id, 'SEEN')}
+                className="rounded-md bg-yellow-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
+              >
+                Seen
+              </button>
               <button
                 onClick={() => updateStatus(req.id, 'DONE')}
-                className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+                className="rounded-md bg-green-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-600 transition-all active:scale-95"
               >
                 Done
               </button>
-            )}
-          </div>
+            </>
+          )}
+          {req.status === 'SEEN' && (
+            <button
+              onClick={() => updateStatus(req.id, 'DONE')}
+              className="rounded-md bg-green-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+            >
+              Done
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {updateError && <ErrorMessage message={updateError} onDismiss={() => setUpdateError('')} />}
 
       {requests.length === 0 && (
@@ -213,16 +213,24 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         </div>
       )}
 
-      {/* Active requests grouped by category */}
+      {/* Active requests grouped by category tiles */}
       {groupedRequests.map((group) => (
-        <div key={group.category} className="space-y-2">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 px-1">
-            <span>{CATEGORY_ICONS[group.category]}</span>
-            <span>{CATEGORY_LABELS[group.category]}</span>
-            <span className="text-xs font-normal text-gray-400">({group.items.length})</span>
-          </h3>
-          {group.items.map(renderRequestCard)}
-        </div>
+        <section
+          key={group.category}
+          className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+          aria-label={`${CATEGORY_LABELS[group.category]} requests`}
+        >
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+            <span className="text-lg">{CATEGORY_ICONS[group.category]}</span>
+            <h3 className="text-sm font-semibold text-gray-700">{CATEGORY_LABELS[group.category]}</h3>
+            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+              {group.items.length}
+            </span>
+          </div>
+          <div className="p-2 space-y-1.5">
+            {group.items.map(renderRequestRow)}
+          </div>
+        </section>
       ))}
 
       {/* Completed requests - collapsed toggle */}
