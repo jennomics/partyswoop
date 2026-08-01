@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx opennextjs-cloudflare build",
+    "deploy": "npx opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",
