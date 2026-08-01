@@ -24,5 +24,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": "Build and tests pass. Song queue API returns SONG-category requests ordered by createdAt ASC. SongQueue component shows Now Playing/Up Next, In Queue with position numbers, and Already Played (DONE reversed). Highlights current user's requests via myRequestIds prop. SSE events (request-update, new-request) drive real-time updates. Song queue accessible from category selection screen via subtle link and shown below RequestTracker after song submission."
+  "findings": "Build and tests pass. Song queue API returns SONG-category requests ordered by createdAt ASC. SongQueue component shows Now Playing/Up Next, In Queue with position numbers, and Already Played (DONE reversed). Highlights current user's requests via myRequestIds prop. SSE events (request-update, new-request) drive real-time updates. Song queue accessible from category selection screen via subtle link and shown below RequestTracker after song submission. Review fix: added defensive null checks on SSE event data fields with early returns if required fields are missing. myRequestIds now persisted to sessionStorage keyed by guestCode to survive page refresh."
 }

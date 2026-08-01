@@ -24,5 +24,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": "Build and tests pass. The Views tab was added between Requests and Menu in the host dashboard. The component uses client-side grouping/filtering for responsiveness, supports SSE real-time updates, and uses ARIA tabpanel roles with keyboard navigation (arrow keys) for the group-by tab switcher."
+  "findings": "Build and tests pass. The Views tab was added between Requests and Menu in the host dashboard. The component uses client-side grouping/filtering for responsiveness, supports SSE real-time updates, and uses ARIA tabpanel roles with keyboard navigation (arrow keys) for the group-by tab switcher. Review fix: changed guest grouping label for LOCATION deliveries from 'Unknown Guest' to 'Location-based Deliveries' since these are legitimately not tied to a named guest."
 }

@@ -26,5 +26,5 @@
     "Run npm test and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": "Build and tests pass. Supply queue API at /api/party/[guestCode]/requests/supplies returns SUPPLY-category requests with location join and partyName. SupplyQueue component shows Being Delivered (SEEN), In Queue (NEW with position numbers), and Delivered (DONE) sections. Highlights current user's requests via myRequestIds prop. SSE events (request-update, new-request) drive real-time updates. Supply queue accessible from category selection screen via subtle link and shown below RequestTracker after supply submission."
+  "findings": "Build and tests pass. Supply queue API at /api/party/[guestCode]/requests/supplies returns SUPPLY-category requests with location join and partyName. SupplyQueue component shows Being Delivered (SEEN), In Queue (NEW with position numbers), and Delivered (DONE) sections. Highlights current user's requests via myRequestIds prop. SSE events (request-update, new-request) drive real-time updates. Supply queue accessible from category selection screen via subtle link and shown below RequestTracker after supply submission. Review fix: added defensive null checks on SSE event data fields with early returns and null coalescing for location field. mySupplyRequestIds now persisted to sessionStorage keyed by guestCode."
 }
