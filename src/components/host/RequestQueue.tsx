@@ -130,60 +130,44 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   activeRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   doneRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // Group active requests by category
-  const categories: RequestItem['category'][] = ['DRINK', 'SUPPLY', 'SONG', 'OTHER'];
+  // Always show all 4 categories in a 2x2 grid (even when empty)
+  const CATEGORY_ORDER: RequestItem['category'][] = ['DRINK', 'SUPPLY', 'SONG', 'OTHER'];
   const CATEGORY_LABELS: Record<string, string> = {
     DRINK: 'Drinks',
     SUPPLY: 'Supplies',
     SONG: 'Songs',
     OTHER: 'Other',
   };
-  const groupedRequests = categories
-    .map((cat) => ({
-      category: cat,
-      items: activeRequests.filter((r) => r.category === cat),
-    }))
-    .filter((group) => group.items.length > 0);
+  const groupedRequests = CATEGORY_ORDER.map((cat) => ({
+    category: cat,
+    items: activeRequests.filter((r) => r.category === cat),
+  }));
 
-  function renderRequestRow(req: RequestItem) {
+  function renderCompactRequest(req: RequestItem) {
     return (
       <div
         key={req.id}
-        className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all ${
+        className={`flex items-center justify-between gap-1 px-2 py-1 rounded-md text-xs ${
           req.status === 'NEW'
-            ? 'bg-blue-50 border border-blue-200'
-            : 'bg-gray-50 border border-gray-100'
+            ? 'bg-blue-50'
+            : 'bg-gray-50'
         }`}
       >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm truncate">{req.item}</span>
-            {req.status === 'NEW' && (
-              <span className="shrink-0 w-2 h-2 rounded-full bg-blue-500" aria-label="New request" />
-            )}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-            <span className="truncate">
-              {req.deliveryType === 'LOCATION'
-                ? `📍 ${req.location?.name || req.deliveryValue}`
-                : `👤 ${req.deliveryValue}`}
-            </span>
-            {req.note && <span className="truncate text-gray-400">· {req.note}</span>}
-            <span className="shrink-0 text-gray-400">{timeAgo(req.createdAt)}</span>
-          </div>
-        </div>
-        <div className="flex gap-1.5 shrink-0">
+        <span className="truncate flex-1 font-medium text-gray-800">{req.item}</span>
+        <div className="flex gap-1 shrink-0">
           {req.status === 'NEW' && (
             <>
               <button
                 onClick={() => updateStatus(req.id, 'SEEN')}
-                className="rounded-md bg-yellow-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
+                className="rounded bg-yellow-500 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-yellow-600 active:scale-95"
+                aria-label={`Mark ${req.item} as seen`}
               >
                 Seen
               </button>
               <button
                 onClick={() => updateStatus(req.id, 'DONE')}
-                className="rounded-md bg-green-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+                className="rounded bg-green-500 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-green-600 active:scale-95"
+                aria-label={`Mark ${req.item} as done`}
               >
                 Done
               </button>
@@ -192,7 +176,8 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
           {req.status === 'SEEN' && (
             <button
               onClick={() => updateStatus(req.id, 'DONE')}
-              className="rounded-md bg-green-500 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+              className="rounded bg-green-500 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-green-600 active:scale-95"
+              aria-label={`Mark ${req.item} as done`}
             >
               Done
             </button>
@@ -203,39 +188,56 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {updateError && <ErrorMessage message={updateError} onDismiss={() => setUpdateError('')} />}
 
-      {requests.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-lg">No requests yet</p>
-          <p className="text-sm mt-1">Share your guest link to get started</p>
-        </div>
-      )}
-
-      {/* Active requests grouped by category tiles */}
-      {groupedRequests.map((group) => (
-        <section
-          key={group.category}
-          className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden"
-          aria-label={`${CATEGORY_LABELS[group.category]} requests`}
-        >
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-            <span className="text-lg">{CATEGORY_ICONS[group.category]}</span>
-            <h3 className="text-sm font-semibold text-gray-700">{CATEGORY_LABELS[group.category]}</h3>
-            <span className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gray-200 text-xs font-medium text-gray-600">
-              {group.items.length}
-            </span>
-          </div>
-          <div className="p-2 space-y-1.5">
-            {group.items.map(renderRequestRow)}
-          </div>
-        </section>
-      ))}
+      {/* 2x2 category tile grid - always visible */}
+      <div className="grid grid-cols-2 gap-2">
+        {groupedRequests.map((group) => (
+          <section
+            key={group.category}
+            className={`rounded-xl border-2 bg-white flex flex-col overflow-hidden min-h-[120px] ${
+              group.items.length > 0
+                ? 'border-gray-200 shadow-sm'
+                : 'border-dashed border-gray-200'
+            }`}
+            aria-label={`${CATEGORY_LABELS[group.category]} requests`}
+          >
+            {/* Tile header */}
+            <div className={`flex items-center gap-1.5 px-2.5 py-2 border-b ${
+              group.items.length > 0
+                ? 'border-gray-200 bg-gray-50'
+                : 'border-gray-100 bg-gray-50/50'
+            }`}>
+              <span className="text-base">{CATEGORY_ICONS[group.category]}</span>
+              <span className={`text-xs font-semibold ${
+                group.items.length > 0 ? 'text-gray-700' : 'text-gray-400'
+              }`}>
+                {CATEGORY_LABELS[group.category]}
+              </span>
+              {group.items.length > 0 && (
+                <span className="ml-auto inline-flex items-center justify-center min-w-[1.1rem] h-4 px-1 rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                  {group.items.length}
+                </span>
+              )}
+            </div>
+            {/* Tile content */}
+            <div className="flex-1 p-1.5 space-y-1 overflow-y-auto">
+              {group.items.length > 0 ? (
+                group.items.map(renderCompactRequest)
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-[11px] text-gray-300">No requests</span>
+                </div>
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
 
       {/* Completed requests - collapsed toggle */}
       {doneRequests.length > 0 && (
-        <div className="pt-2">
+        <div className="pt-1">
           <button
             onClick={() => setShowCompleted(!showCompleted)}
             className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
