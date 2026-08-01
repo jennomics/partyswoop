@@ -11,6 +11,14 @@ interface D1Database {
   exec(query: string): Promise<D1ExecResult>;
 }
 
+/**
+ * Extend the global CloudflareEnv interface (from @opennextjs/cloudflare)
+ * with the app's D1 database binding.
+ */
+interface CloudflareEnv {
+  DB: D1Database;
+}
+
 interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement;
   first<T = unknown>(colName?: string): Promise<T | null>;
