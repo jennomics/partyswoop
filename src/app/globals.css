@@ -12,6 +12,10 @@
   .animate-pulse-once {
     animation: pulse-once 1s ease-in-out;
   }
+
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 @keyframes pulse-once {
