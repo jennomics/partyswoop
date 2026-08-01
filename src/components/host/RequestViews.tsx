@@ -159,7 +159,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
   return (
     <div className="space-y-4">
       {/* Group-by tabs */}
-      <div role="tablist" aria-label="Group requests by" className="flex rounded-lg border border-gray-200 overflow-hidden">
+      <div role="tablist" aria-label="Group requests by" className="flex gap-1 rounded-xl bg-white border-2 border-gray-200 p-1">
         {groupByTabs.map((tab) => (
           <button
             key={tab.id}
@@ -181,10 +181,10 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
               }
             }}
             tabIndex={groupBy === tab.id ? 0 : -1}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-all ${
               groupBy === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
           >
             {tab.label}
@@ -195,14 +195,14 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
+          <label htmlFor="status-filter" className="text-xs font-medium text-gray-500">
             Status:
           </label>
           <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
           >
             <option value="ALL">All</option>
             <option value="NEW">New</option>
@@ -211,14 +211,14 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="category-filter" className="text-sm font-medium text-gray-700">
+          <label htmlFor="category-filter" className="text-xs font-medium text-gray-500">
             Category:
           </label>
           <select
             id="category-filter"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-            className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
           >
             <option value="ALL">All</option>
             <option value="DRINK">Drinks</option>
@@ -230,7 +230,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
       </div>
 
       {/* Results summary */}
-      <p className="text-sm text-gray-500">
+      <p className="text-xs text-gray-400 text-center">
         {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} in {sortedGroupKeys.length} group{sortedGroupKeys.length !== 1 ? 's' : ''}
       </p>
 
@@ -239,7 +239,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
         role="tabpanel"
         id={`tabpanel-${groupBy}`}
         aria-labelledby={`tab-${groupBy}`}
-        className="space-y-2"
+        className="space-y-3"
       >
         {sortedGroupKeys.length === 0 && (
           <div className="text-center py-12 text-gray-500">
@@ -249,47 +249,47 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
         )}
 
         {sortedGroupKeys.map((groupKey) => {
-          const groupRequests = groups[groupKey];
+          const groupReqs = groups[groupKey];
           const isExpanded = expandedGroups.has(groupKey);
-          const newCount = groupRequests.filter((r) => r.status === 'NEW').length;
-          const seenCount = groupRequests.filter((r) => r.status === 'SEEN').length;
-          const doneCount = groupRequests.filter((r) => r.status === 'DONE').length;
+          const newCount = groupReqs.filter((r) => r.status === 'NEW').length;
+          const seenCount = groupReqs.filter((r) => r.status === 'SEEN').length;
+          const doneCount = groupReqs.filter((r) => r.status === 'DONE').length;
 
           return (
-            <div key={groupKey} className="rounded-lg border border-gray-200 overflow-hidden">
+            <div key={groupKey} className="rounded-xl border-2 border-gray-200 bg-white overflow-hidden">
               <button
                 onClick={() => toggleGroup(groupKey)}
                 aria-expanded={isExpanded}
                 aria-controls={`group-content-${groupKey}`}
-                className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all text-left active:scale-[0.99]"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="text-sm transition-transform duration-150"
+                    className="text-xs text-gray-400 transition-transform duration-150"
                     aria-hidden="true"
                     style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                   >
                     ▶
                   </span>
-                  <span className="font-medium truncate">{groupKey}</span>
-                  <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5">
-                    {groupRequests.length}
+                  <span className="font-medium text-sm truncate">{groupKey}</span>
+                  <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5">
+                    {groupReqs.length}
                   </span>
                 </div>
                 <div className="flex gap-1 shrink-0 ml-2">
                   {newCount > 0 && (
                     <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5">
-                      {newCount} new
+                      {newCount}
                     </span>
                   )}
                   {seenCount > 0 && (
                     <span className="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 text-xs px-1.5 py-0.5">
-                      {seenCount} seen
+                      {seenCount}
                     </span>
                   )}
                   {doneCount > 0 && (
                     <span className="inline-flex items-center rounded-full bg-green-100 text-green-800 text-xs px-1.5 py-0.5">
-                      {doneCount} done
+                      {doneCount}
                     </span>
                   )}
                 </div>
@@ -302,12 +302,12 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
                   aria-label={`Requests for ${groupKey}`}
                   className="border-t border-gray-100"
                 >
-                  {groupRequests
+                  {groupReqs
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-b-0 hover:bg-gray-50"
+                        className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-b-0"
                       >
                         <span className="text-base" aria-label={req.category}>
                           {CATEGORY_ICONS[req.category]}
@@ -319,7 +319,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
                               {req.status.toLowerCase()}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
+                          <div className="text-xs text-gray-400 mt-0.5">
                             {groupBy !== 'guest' && req.deliveryType === 'NAME' && (
                               <span>👤 {req.deliveryValue} · </span>
                             )}

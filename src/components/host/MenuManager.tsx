@@ -119,7 +119,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
   function renderItem(item: MenuItem) {
     return (
-      <div key={item.id} className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-b-0">
+      <div key={item.id} className="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-b-0">
         {editingId === item.id ? (
           <input
             type="text"
@@ -130,7 +130,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
               if (e.key === 'Enter') renameItem(item.id);
               if (e.key === 'Escape') setEditingId(null);
             }}
-            className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+            className="flex-1 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
             autoFocus
           />
         ) : (
@@ -159,7 +159,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
         </button>
         <button
           onClick={() => deleteItem(item.id)}
-          className="text-red-400 hover:text-red-600 text-sm px-1"
+          className="text-red-400 hover:text-red-600 text-sm px-1 transition-colors"
           aria-label={`Delete ${item.name}`}
         >
           &times;
@@ -174,7 +174,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
       {/* Drinks section */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Drinks</h2>
+        <h2 className="text-sm text-gray-500 mb-3 font-medium">Drinks</h2>
 
         <div className="flex gap-2 mb-3">
           <input
@@ -182,12 +182,12 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
             value={newDrinkName}
             onChange={(e) => setNewDrinkName(e.target.value)}
             placeholder="Add a drink..."
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
             onKeyDown={(e) => { if (e.key === 'Enter') addItem(newDrinkName, 'DRINK'); }}
           />
           <button
             onClick={() => addItem(newDrinkName, 'DRINK')}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-all active:scale-95"
           >
             Add
           </button>
@@ -195,9 +195,9 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
         <FridgeScan hostCode={hostCode} onSuccess={() => { onUpdate(); setToast('Drinks added to menu!'); }} />
 
-        <div className="mt-3 bg-white rounded-lg border border-gray-200 p-3">
+        <div className="mt-3 rounded-xl bg-white border-2 border-gray-200 p-3">
           {drinks.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2">No drinks yet. Add some or scan your fridge!</p>
+            <p className="text-sm text-gray-400 py-2 text-center">No drinks yet. Add some or scan your fridge!</p>
           ) : (
             drinks.map(renderItem)
           )}
@@ -206,7 +206,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
       {/* Supplies section */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Supplies</h2>
+        <h2 className="text-sm text-gray-500 mb-3 font-medium">Supplies</h2>
 
         <div className="flex gap-2 mb-3">
           <input
@@ -214,20 +214,20 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
             value={newSupplyName}
             onChange={(e) => setNewSupplyName(e.target.value)}
             placeholder="Add a supply..."
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+            className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
             onKeyDown={(e) => { if (e.key === 'Enter') addItem(newSupplyName, 'SUPPLY'); }}
           />
           <button
             onClick={() => addItem(newSupplyName, 'SUPPLY')}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-all active:scale-95"
           >
             Add
           </button>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-3">
+        <div className="rounded-xl bg-white border-2 border-gray-200 p-3">
           {supplies.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2">No supplies yet.</p>
+            <p className="text-sm text-gray-400 py-2 text-center">No supplies yet.</p>
           ) : (
             supplies.map(renderItem)
           )}

@@ -116,64 +116,58 @@ export default function HostDashboard() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-xl font-bold truncate">{party.name}</h1>
-            <span className="text-sm text-gray-500 whitespace-nowrap ml-2">
-              {timeRemaining}h left
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
+    <main className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-sm mx-auto">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-sm text-gray-500 mb-1">{timeRemaining}h remaining</h1>
+          <h2 className="text-3xl font-bold mb-4">{party.name}</h2>
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={copyGuestLink}
-              className="text-sm bg-gray-100 hover:bg-gray-200 rounded px-3 py-1 truncate max-w-[200px] transition-colors"
+              className="text-sm bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-md rounded-xl px-4 py-2 transition-all active:scale-95"
             >
-              {copied ? 'Copied!' : 'Copy guest link'}
+              {copied ? '✓ Copied!' : '🔗 Copy guest link'}
             </button>
             <AudioAlert hostCode={hostCode} />
           </div>
         </div>
-      </header>
 
-      {/* Tabs */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-2xl mx-auto flex">
+        {/* Tabs */}
+        <div className="flex gap-1 rounded-xl bg-white border-2 border-gray-200 p-1 mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-3 text-sm font-medium text-center border-b-2 transition-colors ${
+              className={`flex-1 py-2 text-xs font-medium text-center rounded-lg transition-all ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-      </nav>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto p-4">
-        {activeTab === 'requests' && (
-          <RequestQueue hostCode={hostCode} />
-        )}
-        {activeTab === 'views' && (
-          <RequestViews hostCode={hostCode} />
-        )}
-        {activeTab === 'menu' && (
-          <MenuManager hostCode={hostCode} menuItems={party.menuItems} onUpdate={fetchParty} />
-        )}
-        {activeTab === 'inventory' && (
-          <InventoryManager hostCode={hostCode} />
-        )}
-        {activeTab === 'locations' && (
-          <LocationManager hostCode={hostCode} guestCode={party.guestCode} locations={party.locations} onUpdate={fetchParty} />
-        )}
+        {/* Content */}
+        <div>
+          {activeTab === 'requests' && (
+            <RequestQueue hostCode={hostCode} />
+          )}
+          {activeTab === 'views' && (
+            <RequestViews hostCode={hostCode} />
+          )}
+          {activeTab === 'menu' && (
+            <MenuManager hostCode={hostCode} menuItems={party.menuItems} onUpdate={fetchParty} />
+          )}
+          {activeTab === 'inventory' && (
+            <InventoryManager hostCode={hostCode} />
+          )}
+          {activeTab === 'locations' && (
+            <LocationManager hostCode={hostCode} guestCode={party.guestCode} locations={party.locations} onUpdate={fetchParty} />
+          )}
+        </div>
       </div>
 
       {toast && <Toast message={toast} type="info" onDismiss={() => setToast('')} />}

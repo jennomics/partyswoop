@@ -38,6 +38,7 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updateError, setUpdateError] = useState('');
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const sseEvent = useSSE(`/api/parties/${hostCode}/events`, ['new-request', 'request-update']);
 
@@ -130,7 +131,7 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   doneRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {updateError && <ErrorMessage message={updateError} onDismiss={() => setUpdateError('')} />}
 
       {requests.length === 0 && (
@@ -144,10 +145,10 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
       {activeRequests.map((req) => (
         <div
           key={req.id}
-          className={`rounded-lg border p-4 transition-all ${
+          className={`rounded-xl border-2 p-4 transition-all ${
             req.status === 'NEW'
-              ? 'border-blue-300 bg-blue-50 shadow-sm animate-pulse-once'
-              : 'border-gray-200 bg-white opacity-80'
+              ? 'border-blue-300 bg-white shadow-sm'
+              : 'border-gray-200 bg-white'
           }`}
         >
           <div className="flex items-start justify-between gap-3">
@@ -155,7 +156,6 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{CATEGORY_ICONS[req.category]}</span>
                 <span className="font-medium truncate">{req.item}</span>
-                <span className="text-xs text-gray-400">{timeAgo(req.createdAt)}</span>
               </div>
               {req.note && (
                 <p className="text-sm text-gray-600 ml-7">Note: {req.note}</p>
@@ -165,19 +165,20 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
                   ? `📍 ${req.location?.name || req.deliveryValue}`
                   : `👤 ${req.deliveryValue}`}
               </p>
+              <p className="text-xs text-gray-400 ml-7 mt-1">{timeAgo(req.createdAt)}</p>
             </div>
             <div className="flex gap-2 shrink-0">
               {req.status === 'NEW' && (
                 <>
                   <button
                     onClick={() => updateStatus(req.id, 'SEEN')}
-                    className="rounded bg-yellow-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-yellow-600 transition-colors"
+                    className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
                   >
                     Seen
                   </button>
                   <button
                     onClick={() => updateStatus(req.id, 'DONE')}
-                    className="rounded bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-colors"
+                    className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
                   >
                     Done
                   </button>
@@ -186,7 +187,7 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
               {req.status === 'SEEN' && (
                 <button
                   onClick={() => updateStatus(req.id, 'DONE')}
-                  className="rounded bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-colors"
+                  className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
                 >
                   Done
                 </button>
@@ -196,24 +197,33 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         </div>
       ))}
 
-      {/* Done requests */}
+      {/* Completed requests - collapsed toggle */}
       {doneRequests.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
-            Completed ({doneRequests.length})
-          </h3>
-          {doneRequests.map((req) => (
-            <div
-              key={req.id}
-              className="rounded-lg border border-gray-100 bg-gray-50 p-3 mb-2 opacity-60"
-            >
-              <div className="flex items-center gap-2">
-                <span>{CATEGORY_ICONS[req.category]}</span>
-                <span className="text-sm text-gray-500 line-through">{req.item}</span>
-                <span className="text-xs text-gray-400 ml-auto">{timeAgo(req.createdAt)}</span>
-              </div>
+        <div className="pt-2">
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
+            aria-expanded={showCompleted}
+          >
+            <span className="text-xs transition-transform duration-150" style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+              ▶
+            </span>
+            {showCompleted ? 'Hide' : 'Show'} completed ({doneRequests.length})
+          </button>
+          {showCompleted && (
+            <div className="space-y-1 mt-2">
+              {doneRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-400"
+                >
+                  <span className="text-sm">{CATEGORY_ICONS[req.category]}</span>
+                  <span className="text-sm line-through truncate flex-1">{req.item}</span>
+                  <span className="text-xs">{timeAgo(req.createdAt)}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

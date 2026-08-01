@@ -123,22 +123,22 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
     if (item.isOutOfStock) {
       return (
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
           role="status"
           aria-label={`${item.name} is out of stock`}
         >
-          Out of stock
+          Out
         </span>
       );
     }
     if (item.isLowStock) {
       return (
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
           role="status"
           aria-label={`${item.name} is low on stock`}
         >
-          Low stock
+          Low
         </span>
       );
     }
@@ -152,7 +152,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
       <div
         key={item.id}
         className={`flex flex-col gap-2 py-3 px-3 border-b border-gray-100 last:border-b-0 ${
-          item.isOutOfStock ? 'bg-red-50' : item.isLowStock ? 'bg-yellow-50' : ''
+          item.isOutOfStock ? 'bg-red-50/50' : item.isLowStock ? 'bg-yellow-50/50' : ''
         }`}
         role="listitem"
       >
@@ -174,7 +174,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
             {!isEditing && (
               <button
                 onClick={() => startEditing(item)}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
                 aria-label={`Edit quantity for ${item.name}`}
               >
                 Edit
@@ -196,7 +196,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
                 value={editQuantity}
                 onChange={(e) => setEditQuantity(e.target.value)}
                 placeholder="Unlimited"
-                className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+                className="w-24 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveQuantity(item.id);
                   if (e.key === 'Escape') cancelEditing();
@@ -214,7 +214,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
                 min="0"
                 value={editThreshold}
                 onChange={(e) => setEditThreshold(e.target.value)}
-                className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+                className="w-24 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveQuantity(item.id);
                   if (e.key === 'Escape') cancelEditing();
@@ -224,13 +224,13 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
             <div className="flex gap-2 mt-1">
               <button
                 onClick={() => saveQuantity(item.id)}
-                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-all active:scale-95"
               >
                 Save
               </button>
               <button
                 onClick={cancelEditing}
-                className="text-xs text-gray-600 px-3 py-1 rounded hover:bg-gray-100 transition-colors"
+                className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </button>
@@ -252,25 +252,25 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
         <div className="flex items-center justify-between mb-2">
           <h2
             id={`inventory-${title.toLowerCase()}`}
-            className="text-lg font-semibold"
+            className="text-sm text-gray-500 font-medium"
           >
             {title}
           </h2>
           <div className="flex gap-2">
             {lowStockCount > 0 && (
-              <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded">
+              <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
                 {lowStockCount} low
               </span>
             )}
             {outOfStockCount > 0 && (
-              <span className="text-xs text-red-700 bg-red-100 px-2 py-0.5 rounded">
+              <span className="text-xs text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
                 {outOfStockCount} out
               </span>
             )}
           </div>
         </div>
         <div
-          className="bg-white rounded-lg border border-gray-200"
+          className="rounded-xl bg-white border-2 border-gray-200"
           role="list"
           aria-label={`${title} inventory items`}
         >
