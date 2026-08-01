@@ -8,6 +8,7 @@ import SongRequest from '@/components/guest/SongRequest';
 import OtherRequest from '@/components/guest/OtherRequest';
 import RequestTracker from '@/components/guest/RequestTracker';
 import SongQueue from '@/components/guest/SongQueue';
+import SupplyQueue from '@/components/guest/SupplyQueue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -32,7 +33,7 @@ interface PartyData {
 }
 
 type Category = 'drink' | 'supply' | 'song' | 'other' | null;
-type View = 'main' | 'songQueue';
+type View = 'main' | 'songQueue' | 'supplyQueue';
 
 interface SubmittedRequest {
   id: string;
@@ -54,6 +55,7 @@ export default function GuestPage() {
   const [submittedRequest, setSubmittedRequest] = useState<SubmittedRequest | null>(null);
   const [currentView, setCurrentView] = useState<View>('main');
   const [myRequestIds, setMyRequestIds] = useState<string[]>([]);
+  const [mySupplyRequestIds, setMySupplyRequestIds] = useState<string[]>([]);
 
   const fetchParty = useCallback(async () => {
     try {
@@ -82,6 +84,9 @@ export default function GuestPage() {
     setSubmittedRequest(request);
     if (request.category === 'SONG') {
       setMyRequestIds((prev) => [...prev, request.id]);
+    }
+    if (request.category === 'SUPPLY') {
+      setMySupplyRequestIds((prev) => [...prev, request.id]);
     }
   }
 
@@ -128,6 +133,24 @@ export default function GuestPage() {
     );
   }
 
+  // Show supply queue view
+  if (currentView === 'supplyQueue') {
+    return (
+      <main className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-sm mx-auto">
+          <button
+            onClick={() => setCurrentView('main')}
+            className="text-sm text-blue-600 hover:text-blue-800 mb-4"
+          >
+            &larr; Back
+          </button>
+          <h2 className="text-xl font-bold mb-4">Supply Queue</h2>
+          <SupplyQueue guestCode={guestCode} myRequestIds={mySupplyRequestIds} partyName={party.name} />
+        </div>
+      </main>
+    );
+  }
+
   // Show request tracker if a request was submitted
   if (submittedRequest) {
     return (
@@ -143,6 +166,11 @@ export default function GuestPage() {
           {submittedRequest.category === 'SONG' && (
             <div className="mt-6">
               <SongQueue guestCode={guestCode} myRequestIds={myRequestIds} />
+            </div>
+          )}
+          {submittedRequest.category === 'SUPPLY' && (
+            <div className="mt-6">
+              <SupplyQueue guestCode={guestCode} myRequestIds={mySupplyRequestIds} partyName={party.name} />
             </div>
           )}
           <button
@@ -272,6 +300,14 @@ export default function GuestPage() {
           aria-label="View song request queue"
         >
           🎵 View Song Queue
+        </button>
+
+        <button
+          onClick={() => setCurrentView('supplyQueue')}
+          className="mt-2 text-sm text-gray-500 hover:text-blue-600 transition-colors block mx-auto"
+          aria-label="View supply request queue"
+        >
+          🧻 View Supply Queue
         </button>
       </div>
     </main>
