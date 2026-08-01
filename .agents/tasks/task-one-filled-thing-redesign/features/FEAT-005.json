@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Fix 5 issues from semantic review: (1) state dots render as squares due to borderRadius.full override, (2) multiple filled blocks on host queue, (3) hover:bg-live-wash violates style guide, (4) Toast type prop dead code, (5) RequestQueue NEW rows missing border-b separator.",
+  "status": "completed",
+  "steps": [
+    "Fix tailwind.config.ts borderRadius.full to '9999px' so rounded-full works for 6px state dots",
+    "Fix RequestQueue.tsx to only fill the most recent/top NEW request with bg-live; remaining NEW requests get border-l-[1.5px] border-live treatment",
+    "Fix RequestViews.tsx to only fill the most recent/top NEW request with bg-live; remaining NEW requests get border-l-[1.5px] border-live treatment",
+    "Remove hover:bg-live-wash from src/app/page.tsx, src/app/party/[guestCode]/page.tsx, and src/app/host/[hostCode]/page.tsx",
+    "Remove type prop from Toast interface and destructuring, remove type='info' from host dashboard call site",
+    "Add border-b border-white/20 to filled NEW rows in RequestQueue for visual separation"
+  ],
+  "acceptance_criteria": [
+    "rounded-full resolves to border-radius: 9999px (not 0)",
+    "Only the most recent NEW request per screen gets bg-live fill",
+    "No hover:bg-live-wash anywhere in the codebase",
+    "Toast component has no type prop in interface or parameters",
+    "Adjacent NEW rows in RequestQueue have visible separators",
+    "npm run build succeeds",
+    "npm test passes"
+  ],
+  "verification": [
+    "npm run build",
+    "npm test"
+  ],
+  "blocked_reason": null,
+  "findings": "All acceptance criteria met: rounded-full = 9999px, only newest NEW request per screen gets bg-live, no hover:bg-live-wash anywhere, Toast has no type prop, adjacent NEW rows have separators. Build and all 53 tests pass."
+}

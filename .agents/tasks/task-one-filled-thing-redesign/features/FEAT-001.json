@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "refactor",
   "description": "Set up the design system foundation: tailwind.config.ts with custom tokens, globals.css with CSS variables and base typography, layout.tsx with Google Fonts (Zen Kaku Gothic New 300/500, DM Mono 400), and restyle the three UI primitives (ErrorMessage, LoadingSpinner, Toast) to follow the One Filled Thing style guide.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Update tailwind.config.ts to define custom colors (paper: #F6F5F1, rule: #E6E4DC, live: #A8512C, ink: #1C1C1A, live-wash: #F1E6E0), ink opacity variants (ink-72, ink-50, ink-35), spacing scale (s-1 through s-6: 8, 16, 24, 40, 64, 104), fontFamily entries for 'zen' (Zen Kaku Gothic New) and 'mono' (DM Mono), fontSize entries matching the type scale (display 76px, h1 42px, h2 30px, h3 24px, body 16px/27px, list 15px/21px, meta 11px/18px), borderRadius of 0 globally, and remove any default shadow utilities.",
     "Rewrite src/app/globals.css to define CSS custom properties (--paper, --rule, --live, --ink, --ink-72, --ink-50, --ink-35, --live-wash, spacing --s-1 through --s-6, --radius: 0, --target-min: 44px, --dur-fast: 180ms, --dur: 240ms, --ease: cubic-bezier(.2,.6,.3,1)), set body background to var(--paper), text color to var(--ink), font-family to Zen Kaku Gothic New, add @media (prefers-reduced-motion) rule setting all durations to 0, keep the existing print styles and safe-area-pb utility, remove animate-pulse-once keyframe.",
@@ -22,5 +22,5 @@
     "npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and tests pass. Updated ErrorMessage.test.tsx to check for new design system classes instead of old red color classes. Toast component no longer uses the 'type' prop for colored fills but keeps it in the interface for API compatibility (unused). LoadingSpinner uses motion-reduce:animate-none for prefers-reduced-motion compliance."
 }
