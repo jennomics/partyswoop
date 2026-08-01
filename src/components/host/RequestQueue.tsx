@@ -17,11 +17,11 @@ interface RequestItem {
   location?: { name: string } | null;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  DRINK: '🍺',
-  SUPPLY: '🧻',
-  SONG: '🎵',
-  OTHER: '💬',
+const CATEGORY_LABELS: Record<string, string> = {
+  DRINK: 'Drinks',
+  SUPPLY: 'Supplies',
+  SONG: 'Songs',
+  OTHER: 'Other',
 };
 
 function timeAgo(dateStr: string): string {
@@ -131,66 +131,65 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   activeRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   doneRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // Always show all 4 categories in a 2x2 grid (even when empty)
+  // Always show all 4 categories
   const CATEGORY_ORDER: RequestItem['category'][] = ['DRINK', 'SUPPLY', 'SONG', 'OTHER'];
-  const CATEGORY_LABELS: Record<string, string> = {
-    DRINK: 'Drinks',
-    SUPPLY: 'Supplies',
-    SONG: 'Songs',
-    OTHER: 'Other',
-  };
   const groupedRequests = CATEGORY_ORDER.map((cat) => ({
     category: cat,
     items: activeRequests.filter((r) => r.category === cat),
   }));
 
   function renderRequestRow(req: RequestItem) {
+    const isNew = req.status === 'NEW';
+    const isSeen = req.status === 'SEEN';
+
     return (
       <div
         key={req.id}
-        className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm ${
-          req.status === 'NEW'
-            ? 'bg-blue-50 border border-blue-100'
-            : 'bg-gray-50 border border-gray-100'
+        className={`flex items-center justify-between gap-2 p-s-2 min-h-[44px] ${
+          isNew
+            ? 'bg-live text-white'
+            : 'border-b border-rule'
         }`}
       >
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="truncate font-medium text-gray-800">{req.item}</span>
-          <span className="text-xs text-gray-500 truncate">
+          <span className={`truncate text-list font-zen ${isNew ? 'text-white font-medium' : 'text-ink'}`}>
+            {req.item}
+          </span>
+          <span className={`font-mono text-meta truncate ${isNew ? 'text-white/70' : 'text-ink-50'}`}>
             {req.deliveryType === 'LOCATION' && req.location
-              ? `📍 ${req.location.name}`
-              : `👤 ${req.deliveryValue}`}
-            {' · '}{timeAgo(req.createdAt)}
+              ? req.location.name
+              : req.deliveryValue}
+            {' / '}{timeAgo(req.createdAt)}
           </span>
           {req.note && (
-            <span className="text-xs text-gray-400 truncate mt-0.5">
+            <span className={`text-meta truncate mt-0.5 ${isNew ? 'text-white/70' : 'text-ink-35'}`}>
               &quot;{req.note}&quot;
             </span>
           )}
         </div>
-        <div className="flex gap-1.5 shrink-0">
-          {req.status === 'NEW' && (
+        <div className="flex gap-2 shrink-0">
+          {isNew && (
             <>
               <button
                 onClick={() => updateStatus(req.id, 'SEEN')}
-                className="rounded-md bg-yellow-500 px-2 py-1 text-xs font-medium text-white hover:bg-yellow-600 active:scale-95 transition-transform"
+                className="border border-white text-white font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
                 aria-label={`Mark ${req.item} as seen`}
               >
                 Seen
               </button>
               <button
                 onClick={() => updateStatus(req.id, 'DONE')}
-                className="rounded-md bg-green-500 px-2 py-1 text-xs font-medium text-white hover:bg-green-600 active:scale-95 transition-transform"
+                className="border-[1.5px] border-white text-white font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
                 aria-label={`Mark ${req.item} as done`}
               >
                 Done
               </button>
             </>
           )}
-          {req.status === 'SEEN' && (
+          {isSeen && (
             <button
               onClick={() => updateStatus(req.id, 'DONE')}
-              className="rounded-md bg-green-500 px-2 py-1 text-xs font-medium text-white hover:bg-green-600 active:scale-95 transition-transform"
+              className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-3 min-h-[44px] min-w-[44px]"
               aria-label={`Mark ${req.item} as done`}
             >
               Done
@@ -216,52 +215,51 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
           {/* Back button and header */}
           <button
             onClick={() => setSelectedCategory(null)}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors py-1"
+            className="flex items-center gap-1.5 text-body text-ink-50 min-h-[44px]"
             aria-label="Back to all categories"
           >
-            <span className="text-xs">←</span>
+            <span className="text-meta">&#8592;</span>
             <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-2 px-1">
-            <span className="text-2xl">{CATEGORY_ICONS[selectedCategory]}</span>
-            <h3 className="text-lg font-bold text-gray-800">
+          <div className="flex items-center gap-2 border-b border-rule pb-2">
+            <h3 className="text-h3 font-zen font-medium text-ink">
               {CATEGORY_LABELS[selectedCategory]}
             </h3>
             {selectedGroup.items.length > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+              <span className="font-mono text-body text-ink">
                 {selectedGroup.items.length}
               </span>
             )}
           </div>
 
           {/* Request list */}
-          <div className="space-y-2">
+          <div>
             {selectedGroup.items.length > 0 ? (
               selectedGroup.items.map(renderRequestRow)
             ) : (
               <div className="flex items-center justify-center py-8">
-                <span className="text-sm text-gray-400">No active requests</span>
+                <span className="text-body text-ink-35">No active requests</span>
               </div>
             )}
           </div>
 
           {/* Done requests for this category */}
           {doneRequests.filter((r) => r.category === selectedCategory).length > 0 && (
-            <div className="pt-2 border-t border-gray-100">
-              <p className="text-xs font-medium text-gray-400 mb-1.5 px-1">
+            <div className="pt-2 border-t border-rule">
+              <p className="font-mono text-meta text-ink-35 uppercase mb-2">
                 Completed ({doneRequests.filter((r) => r.category === selectedCategory).length})
               </p>
-              <div className="space-y-1">
+              <div>
                 {doneRequests
                   .filter((r) => r.category === selectedCategory)
                   .map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-400"
+                      className="flex items-center gap-2 py-2 border-b border-rule last:border-b-0 min-h-[44px]"
                     >
-                      <span className="text-sm line-through truncate flex-1">{req.item}</span>
-                      <span className="text-xs">{timeAgo(req.createdAt)}</span>
+                      <span className="text-list text-ink-35 line-through truncate flex-1">{req.item}</span>
+                      <span className="font-mono text-meta text-ink-35">{timeAgo(req.createdAt)}</span>
                     </div>
                   ))}
               </div>
@@ -270,33 +268,26 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         </div>
       ) : (
         <>
-          {/* 2x2 category tile grid - compact, clickable tiles */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Category list - ruled rows */}
+          <div className="border-t border-rule">
             {groupedRequests.map((group) => (
               <button
                 key={group.category}
                 type="button"
                 onClick={() => setSelectedCategory(group.category)}
-                className={`rounded-xl border-2 bg-white flex flex-col items-center justify-center p-4 min-h-[100px] transition-all active:scale-95 ${
-                  group.items.length > 0
-                    ? 'border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md'
-                    : 'border-dashed border-gray-200 hover:border-gray-300'
-                }`}
+                className="w-full flex items-center justify-between p-s-2 border-b border-rule min-h-[44px] text-left"
                 aria-label={`${CATEGORY_LABELS[group.category]} - ${group.items.length} requests. Tap to view.`}
               >
-                <span className="text-3xl mb-1">{CATEGORY_ICONS[group.category]}</span>
-                <span className={`text-sm font-semibold ${
-                  group.items.length > 0 ? 'text-gray-700' : 'text-gray-400'
+                <span className={`text-list font-zen ${
+                  group.items.length > 0 ? 'text-ink' : 'text-ink-35'
                 }`}>
                   {CATEGORY_LABELS[group.category]}
                 </span>
-                {group.items.length > 0 ? (
-                  <span className="mt-1 inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                    {group.items.length}
-                  </span>
-                ) : (
-                  <span className="mt-1 text-xs text-gray-300">None</span>
-                )}
+                <span className={`font-mono text-body ${
+                  group.items.length > 0 ? 'text-ink' : 'text-ink-35'
+                }`}>
+                  {group.items.length}
+                </span>
               </button>
             ))}
           </div>
@@ -306,24 +297,26 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
             <div className="pt-1">
               <button
                 onClick={() => setShowCompleted(!showCompleted)}
-                className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
+                className="w-full flex items-center justify-center gap-2 text-body text-ink-35 min-h-[44px]"
                 aria-expanded={showCompleted}
               >
-                <span className="text-xs transition-transform duration-150" style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                  ▶
+                <span className="text-meta" aria-hidden="true">
+                  {showCompleted ? '\u25BC' : '\u25B6'}
                 </span>
-                {showCompleted ? 'Hide' : 'Show'} completed ({doneRequests.length})
+                <span className="font-mono text-meta uppercase">
+                  {showCompleted ? 'Hide' : 'Show'} completed ({doneRequests.length})
+                </span>
               </button>
               {showCompleted && (
-                <div className="space-y-1 mt-2">
+                <div className="mt-2 border-t border-rule">
                   {doneRequests.map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-400"
+                      className="flex items-center gap-2 py-2 border-b border-rule last:border-b-0 min-h-[44px]"
                     >
-                      <span className="text-sm">{CATEGORY_ICONS[req.category]}</span>
-                      <span className="text-sm line-through truncate flex-1">{req.item}</span>
-                      <span className="text-xs">{timeAgo(req.createdAt)}</span>
+                      <span className="font-mono text-meta text-ink-35 uppercase">{req.category}</span>
+                      <span className="text-list text-ink-35 line-through truncate flex-1">{req.item}</span>
+                      <span className="font-mono text-meta text-ink-35">{timeAgo(req.createdAt)}</span>
                     </div>
                   ))}
                 </div>

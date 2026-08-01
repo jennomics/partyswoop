@@ -82,25 +82,25 @@ export default function FridgeScan({ hostCode, onSuccess }: FridgeScanProps) {
           accept="image/*"
           multiple
           onChange={handleFileSelect}
-          className="text-sm file:mr-2 file:rounded file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
+          className="text-meta font-mono text-ink-50 file:mr-2 file:border file:border-rule file:bg-transparent file:px-3 file:py-1.5 file:text-meta file:font-mono file:text-ink"
         />
         <button
           onClick={handleScan}
           disabled={files.length === 0 || scanning}
-          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+          className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-4 min-h-[44px] disabled:opacity-50 whitespace-nowrap"
         >
           {scanning ? (
             <span className="flex items-center gap-1">
-              <LoadingSpinner size="sm" /> Scanning...
+              <LoadingSpinner size="sm" /> Scanning
             </span>
           ) : (
-            '📷 Scan Photos'
+            'Scan photos'
           )}
         </button>
       </div>
 
       {files.length > 0 && !scanning && (
-        <p className="text-xs text-gray-500">{files.length} photo{files.length > 1 ? 's' : ''} selected</p>
+        <p className="font-mono text-meta text-ink-50">{files.length} photo{files.length > 1 ? 's' : ''} selected</p>
       )}
 
       {error && (
@@ -108,7 +108,7 @@ export default function FridgeScan({ hostCode, onSuccess }: FridgeScanProps) {
           <ErrorMessage message={error} onDismiss={() => setError('')} />
           <button
             onClick={() => { setError(''); setFiles([]); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-            className="text-sm text-blue-600 hover:text-blue-800 underline"
+            className="underline text-meta text-ink min-h-[44px]"
           >
             Add drinks manually instead
           </button>

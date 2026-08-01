@@ -21,19 +21,6 @@ type GroupBy = 'guest' | 'location' | 'item';
 type StatusFilter = 'NEW' | 'SEEN' | 'DONE' | 'ALL';
 type CategoryFilter = 'DRINK' | 'SUPPLY' | 'SONG' | 'OTHER' | 'ALL';
 
-const CATEGORY_ICONS: Record<string, string> = {
-  DRINK: '🍺',
-  SUPPLY: '🧻',
-  SONG: '🎵',
-  OTHER: '💬',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
-  SEEN: 'bg-yellow-100 text-yellow-800',
-  DONE: 'bg-green-100 text-green-800',
-};
-
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -50,10 +37,10 @@ function groupRequests(requests: RequestItem[], groupBy: GroupBy): Record<string
     let key: string;
     switch (groupBy) {
       case 'guest':
-        key = req.deliveryType === 'NAME' ? req.deliveryValue : 'Location-based Deliveries';
+        key = req.deliveryType === 'NAME' ? req.deliveryValue : 'Location-based deliveries';
         break;
       case 'location':
-        key = req.location?.name || req.deliveryValue || 'No Location';
+        key = req.location?.name || req.deliveryValue || 'No location';
         break;
       case 'item':
         key = req.item;
@@ -144,22 +131,21 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
 
   const groups = groupRequests(filteredRequests, groupBy);
   const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
-    // Sort by count descending, then alphabetically
     const countDiff = groups[b].length - groups[a].length;
     if (countDiff !== 0) return countDiff;
     return a.localeCompare(b);
   });
 
   const groupByTabs: { id: GroupBy; label: string }[] = [
-    { id: 'guest', label: 'By Guest' },
-    { id: 'location', label: 'By Location' },
-    { id: 'item', label: 'By Item' },
+    { id: 'guest', label: 'By guest' },
+    { id: 'location', label: 'By location' },
+    { id: 'item', label: 'By item' },
   ];
 
   return (
     <div className="space-y-4">
-      {/* Group-by tabs */}
-      <div role="tablist" aria-label="Group requests by" className="flex gap-1 rounded-xl bg-white border-2 border-gray-200 p-1">
+      {/* Group-by tabs - ruled underline style */}
+      <div role="tablist" aria-label="Group requests by" className="flex border-b border-rule">
         {groupByTabs.map((tab) => (
           <button
             key={tab.id}
@@ -181,10 +167,10 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
               }
             }}
             tabIndex={groupBy === tab.id ? 0 : -1}
-            className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-all ${
+            className={`flex-1 py-3 text-list font-zen min-h-[44px] ${
               groupBy === tab.id
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'text-ink border-b-[1.5px] border-ink font-medium'
+                : 'text-ink-50'
             }`}
           >
             {tab.label}
@@ -193,16 +179,16 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-s-3">
         <div className="flex items-center gap-2">
-          <label htmlFor="status-filter" className="text-xs font-medium text-gray-500">
-            Status:
+          <label htmlFor="status-filter" className="font-mono text-meta text-ink-50 uppercase">
+            Status
           </label>
           <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
+            className="border-b border-rule bg-transparent px-1 py-1 text-list font-zen text-ink focus:border-ink focus:outline-none min-h-[44px]"
           >
             <option value="ALL">All</option>
             <option value="NEW">New</option>
@@ -211,14 +197,14 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="category-filter" className="text-xs font-medium text-gray-500">
-            Category:
+          <label htmlFor="category-filter" className="font-mono text-meta text-ink-50 uppercase">
+            Category
           </label>
           <select
             id="category-filter"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-            className="rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
+            className="border-b border-rule bg-transparent px-1 py-1 text-list font-zen text-ink focus:border-ink focus:outline-none min-h-[44px]"
           >
             <option value="ALL">All</option>
             <option value="DRINK">Drinks</option>
@@ -230,7 +216,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
       </div>
 
       {/* Results summary */}
-      <p className="text-xs text-gray-400 text-center">
+      <p className="font-mono text-meta text-ink-35">
         {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} in {sortedGroupKeys.length} group{sortedGroupKeys.length !== 1 ? 's' : ''}
       </p>
 
@@ -239,12 +225,11 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
         role="tabpanel"
         id={`tabpanel-${groupBy}`}
         aria-labelledby={`tab-${groupBy}`}
-        className="space-y-3"
       >
         {sortedGroupKeys.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">No requests match filters</p>
-            <p className="text-sm mt-1">Try adjusting the status or category filter</p>
+          <div className="text-center py-12 text-ink-50">
+            <p className="text-body">No requests match filters</p>
+            <p className="text-meta mt-1">Try adjusting the status or category filter</p>
           </div>
         )}
 
@@ -256,40 +241,39 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
           const doneCount = groupReqs.filter((r) => r.status === 'DONE').length;
 
           return (
-            <div key={groupKey} className="rounded-xl border-2 border-gray-200 bg-white overflow-hidden">
+            <div key={groupKey} className="border-b border-rule">
               <button
                 onClick={() => toggleGroup(groupKey)}
                 aria-expanded={isExpanded}
                 aria-controls={`group-content-${groupKey}`}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-all text-left active:scale-[0.99]"
+                className="w-full flex items-center justify-between p-s-2 min-h-[44px] text-left"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="text-xs text-gray-400 transition-transform duration-150"
+                    className="text-meta text-ink-50"
                     aria-hidden="true"
-                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                   >
-                    ▶
+                    {isExpanded ? '\u25BC' : '\u25B6'}
                   </span>
-                  <span className="font-medium text-sm truncate">{groupKey}</span>
-                  <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5">
+                  <span className="font-zen text-list text-ink truncate">{groupKey}</span>
+                  <span className="font-mono text-meta text-ink-50">
                     {groupReqs.length}
                   </span>
                 </div>
-                <div className="flex gap-1 shrink-0 ml-2">
+                <div className="flex gap-2 shrink-0 ml-2 font-mono text-meta">
                   {newCount > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5">
-                      {newCount}
+                    <span className="text-live">
+                      {newCount} new
                     </span>
                   )}
                   {seenCount > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 text-xs px-1.5 py-0.5">
-                      {seenCount}
+                    <span className="text-ink-72">
+                      {seenCount} seen
                     </span>
                   )}
                   {doneCount > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-green-100 text-green-800 text-xs px-1.5 py-0.5">
-                      {doneCount}
+                    <span className="text-ink-35">
+                      {doneCount} done
                     </span>
                   )}
                 </div>
@@ -300,40 +284,54 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
                   id={`group-content-${groupKey}`}
                   role="region"
                   aria-label={`Requests for ${groupKey}`}
-                  className="border-t border-gray-100"
+                  className="border-t border-rule"
                 >
                   {groupReqs
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-b-0"
+                        className={`flex items-center gap-3 px-s-2 py-2 border-b border-rule last:border-b-0 min-h-[44px] ${
+                          req.status === 'NEW' ? 'bg-live text-white' : ''
+                        }`}
                       >
-                        <span className="text-base" aria-label={req.category}>
-                          {CATEGORY_ICONS[req.category]}
+                        <span className={`font-mono text-meta uppercase ${
+                          req.status === 'NEW' ? 'text-white/70' : 'text-ink-50'
+                        }`} aria-label={req.category}>
+                          {req.category}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{req.item}</span>
-                            <span className={`inline-flex items-center rounded-full text-xs px-1.5 py-0.5 ${STATUS_COLORS[req.status]}`}>
+                            <span className={`text-list font-zen truncate ${
+                              req.status === 'NEW' ? 'text-white' :
+                              req.status === 'DONE' ? 'text-ink-35 line-through' : 'text-ink'
+                            }`}>{req.item}</span>
+                            <span className={`font-mono text-meta ${
+                              req.status === 'NEW' ? 'text-white/70' :
+                              req.status === 'DONE' ? 'text-ink-35' : 'text-ink-72'
+                            }`}>
                               {req.status.toLowerCase()}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-400 mt-0.5">
+                          <div className={`font-mono text-meta mt-0.5 ${
+                            req.status === 'NEW' ? 'text-white/70' : 'text-ink-35'
+                          }`}>
                             {groupBy !== 'guest' && req.deliveryType === 'NAME' && (
-                              <span>👤 {req.deliveryValue} · </span>
+                              <span>{req.deliveryValue} / </span>
                             )}
                             {groupBy !== 'location' && (
                               <span>
                                 {req.deliveryType === 'LOCATION'
-                                  ? `📍 ${req.location?.name || req.deliveryValue}`
+                                  ? `${req.location?.name || req.deliveryValue}`
                                   : ''}{' '}
                               </span>
                             )}
                             <span>{timeAgo(req.createdAt)}</span>
                           </div>
                           {req.note && (
-                            <p className="text-xs text-gray-400 mt-0.5 truncate">
+                            <p className={`text-meta mt-0.5 truncate ${
+                              req.status === 'NEW' ? 'text-white/70' : 'text-ink-35'
+                            }`}>
                               Note: {req.note}
                             </p>
                           )}

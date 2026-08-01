@@ -119,75 +119,49 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
   const drinks = items.filter((i) => i.category === 'DRINK');
   const supplies = items.filter((i) => i.category === 'SUPPLY');
 
-  function renderStatusBadge(item: InventoryItem) {
-    if (item.isOutOfStock) {
-      return (
-        <span
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-          role="status"
-          aria-label={`${item.name} is out of stock`}
-        >
-          Out
-        </span>
-      );
-    }
-    if (item.isLowStock) {
-      return (
-        <span
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
-          role="status"
-          aria-label={`${item.name} is low on stock`}
-        >
-          Low
-        </span>
-      );
-    }
-    return null;
-  }
-
   function renderItem(item: InventoryItem) {
     const isEditing = editingId === item.id;
 
     return (
       <div
         key={item.id}
-        className={`flex flex-col gap-2 py-3 px-3 border-b border-gray-100 last:border-b-0 ${
-          item.isOutOfStock ? 'bg-red-50/50' : item.isLowStock ? 'bg-yellow-50/50' : ''
-        }`}
+        className="flex flex-col gap-2 py-3 px-0 border-b border-rule last:border-b-0 min-h-[44px]"
         role="listitem"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
+            {item.isLowStock && !item.isOutOfStock && (
+              <span className="inline-block w-[6px] h-[6px] rounded-full bg-live shrink-0" aria-hidden="true" />
+            )}
             <span
-              className={`text-sm font-medium truncate ${
-                item.isOutOfStock ? 'text-red-600 line-through' : ''
+              className={`text-list font-zen truncate ${
+                item.isOutOfStock ? 'text-ink-35 line-through' : 'text-ink'
               }`}
             >
               {item.name}
             </span>
-            {renderStatusBadge(item)}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-sm text-gray-600 tabular-nums">
+            <span className="font-mono text-body text-ink tabular-nums">
               {item.quantity !== null ? item.quantity : '\u221E'}
             </span>
             {!isEditing && (
               <button
                 onClick={() => startEditing(item)}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                className="underline text-meta text-ink-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label={`Edit quantity for ${item.name}`}
               >
-                Edit
+                edit
               </button>
             )}
           </div>
         </div>
 
         {isEditing && (
-          <div className="flex flex-col gap-2 pl-0 mt-1">
+          <div className="flex flex-col gap-2 mt-1">
             <div className="flex items-center gap-2">
-              <label htmlFor={`qty-${item.id}`} className="text-xs text-gray-500 w-16">
-                Qty:
+              <label htmlFor={`qty-${item.id}`} className="font-mono text-meta text-ink-50 uppercase w-16">
+                Qty
               </label>
               <input
                 id={`qty-${item.id}`}
@@ -196,7 +170,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
                 value={editQuantity}
                 onChange={(e) => setEditQuantity(e.target.value)}
                 placeholder="Unlimited"
-                className="w-24 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
+                className="w-24 border-b border-rule bg-transparent px-1 py-1 text-list font-mono text-ink focus:outline-none focus:border-ink min-h-[44px]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveQuantity(item.id);
                   if (e.key === 'Escape') cancelEditing();
@@ -205,8 +179,8 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
               />
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor={`threshold-${item.id}`} className="text-xs text-gray-500 w-16">
-                Alert at:
+              <label htmlFor={`threshold-${item.id}`} className="font-mono text-meta text-ink-50 uppercase w-16">
+                Alert at
               </label>
               <input
                 id={`threshold-${item.id}`}
@@ -214,25 +188,25 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
                 min="0"
                 value={editThreshold}
                 onChange={(e) => setEditThreshold(e.target.value)}
-                className="w-24 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
+                className="w-24 border-b border-rule bg-transparent px-1 py-1 text-list font-mono text-ink focus:outline-none focus:border-ink min-h-[44px]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveQuantity(item.id);
                   if (e.key === 'Escape') cancelEditing();
                 }}
               />
             </div>
-            <div className="flex gap-2 mt-1">
+            <div className="flex gap-3 mt-1">
               <button
                 onClick={() => saveQuantity(item.id)}
-                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-all active:scale-95"
+                className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-4 min-h-[44px]"
               >
                 Save
               </button>
               <button
                 onClick={cancelEditing}
-                className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="underline text-meta text-ink min-h-[44px] flex items-center"
               >
-                Cancel
+                cancel
               </button>
             </div>
           </div>
@@ -244,33 +218,32 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
   function renderSection(title: string, sectionItems: InventoryItem[]) {
     if (sectionItems.length === 0) return null;
 
-    const lowStockCount = sectionItems.filter((i) => i.isLowStock).length;
+    const lowStockCount = sectionItems.filter((i) => i.isLowStock && !i.isOutOfStock).length;
     const outOfStockCount = sectionItems.filter((i) => i.isOutOfStock).length;
 
     return (
       <section aria-labelledby={`inventory-${title.toLowerCase()}`}>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 border-b border-rule pb-2">
           <h2
             id={`inventory-${title.toLowerCase()}`}
-            className="text-sm text-gray-500 font-medium"
+            className="font-mono text-meta text-ink-50 uppercase"
           >
             {title}
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-3 font-mono text-meta">
             {lowStockCount > 0 && (
-              <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+              <span className="text-live">
                 {lowStockCount} low
               </span>
             )}
             {outOfStockCount > 0 && (
-              <span className="text-xs text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
+              <span className="text-ink-35">
                 {outOfStockCount} out
               </span>
             )}
           </div>
         </div>
         <div
-          className="rounded-xl bg-white border-2 border-gray-200"
           role="list"
           aria-label={`${title} inventory items`}
         >
@@ -286,7 +259,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
 
       {items.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 text-sm">
+          <p className="text-body text-ink-50">
             No items in your menu yet. Add items from the Menu tab, then set quantities here.
           </p>
         </div>

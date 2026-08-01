@@ -119,7 +119,7 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
   function renderItem(item: MenuItem) {
     return (
-      <div key={item.id} className="flex items-center gap-2 py-2.5 border-b border-gray-100 last:border-b-0">
+      <div key={item.id} className="flex items-center gap-2 py-3 border-b border-rule last:border-b-0 min-h-[44px]">
         {editingId === item.id ? (
           <input
             type="text"
@@ -130,12 +130,12 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
               if (e.key === 'Enter') renameItem(item.id);
               if (e.key === 'Escape') setEditingId(null);
             }}
-            className="flex-1 rounded-lg border-2 border-gray-200 px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
+            className="flex-1 border-b border-ink bg-transparent px-1 py-1 text-list font-zen text-ink focus:outline-none focus:border-live"
             autoFocus
           />
         ) : (
           <span
-            className={`flex-1 text-sm cursor-pointer ${!item.available ? 'text-gray-400 line-through' : ''}`}
+            className={`flex-1 text-list font-zen cursor-pointer ${!item.available ? 'text-ink-35 line-through' : 'text-ink'}`}
             onClick={() => startEditing(item)}
             title="Click to edit"
           >
@@ -144,25 +144,23 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
         )}
         <button
           onClick={() => toggleAvailability(item)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-            item.available ? 'bg-green-500' : 'bg-gray-300'
-          }`}
+          className="relative shrink-0 flex items-center justify-center w-[44px] h-[44px]"
           role="switch"
           aria-checked={item.available}
           aria-label={`Toggle ${item.name} availability`}
         >
           <span
-            className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${
-              item.available ? 'translate-x-5' : 'translate-x-0'
+            className={`inline-block w-[6px] h-[6px] rounded-full ${
+              item.available ? 'bg-live' : 'bg-rule'
             }`}
           />
         </button>
         <button
           onClick={() => deleteItem(item.id)}
-          className="text-red-400 hover:text-red-600 text-sm px-1 transition-colors"
+          className="text-ink-50 underline text-meta min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label={`Delete ${item.name}`}
         >
-          &times;
+          remove
         </button>
       </div>
     );
@@ -174,30 +172,30 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
       {/* Drinks section */}
       <section>
-        <h2 className="text-sm text-gray-500 mb-3 font-medium">Drinks</h2>
+        <h2 className="font-mono text-meta text-ink-50 uppercase mb-s-3">Drinks</h2>
 
         <div className="flex gap-2 mb-3">
           <input
             type="text"
             value={newDrinkName}
             onChange={(e) => setNewDrinkName(e.target.value)}
-            placeholder="Add a drink..."
-            className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+            placeholder="Add a drink"
+            className="flex-1 border-b border-rule bg-transparent px-1 py-2 text-list font-zen text-ink placeholder:text-ink-35 focus:outline-none focus:border-ink min-h-[44px]"
             onKeyDown={(e) => { if (e.key === 'Enter') addItem(newDrinkName, 'DRINK'); }}
           />
           <button
             onClick={() => addItem(newDrinkName, 'DRINK')}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-all active:scale-95"
+            className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-4 min-h-[44px]"
           >
             Add
           </button>
         </div>
 
-        <FridgeScan hostCode={hostCode} onSuccess={() => { onUpdate(); setToast('Drinks added to menu!'); }} />
+        <FridgeScan hostCode={hostCode} onSuccess={() => { onUpdate(); setToast('Drinks added to menu'); }} />
 
-        <div className="mt-3 rounded-xl bg-white border-2 border-gray-200 p-3">
+        <div className="mt-3 border-t border-rule">
           {drinks.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2 text-center">No drinks yet. Add some or scan your fridge!</p>
+            <p className="text-body text-ink-35 py-4">No drinks yet</p>
           ) : (
             drinks.map(renderItem)
           )}
@@ -206,28 +204,28 @@ export default function MenuManager({ hostCode, menuItems, onUpdate }: MenuManag
 
       {/* Supplies section */}
       <section>
-        <h2 className="text-sm text-gray-500 mb-3 font-medium">Supplies</h2>
+        <h2 className="font-mono text-meta text-ink-50 uppercase mb-s-3">Supplies</h2>
 
         <div className="flex gap-2 mb-3">
           <input
             type="text"
             value={newSupplyName}
             onChange={(e) => setNewSupplyName(e.target.value)}
-            placeholder="Add a supply..."
-            className="flex-1 rounded-xl border-2 border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+            placeholder="Add a supply"
+            className="flex-1 border-b border-rule bg-transparent px-1 py-2 text-list font-zen text-ink placeholder:text-ink-35 focus:outline-none focus:border-ink min-h-[44px]"
             onKeyDown={(e) => { if (e.key === 'Enter') addItem(newSupplyName, 'SUPPLY'); }}
           />
           <button
             onClick={() => addItem(newSupplyName, 'SUPPLY')}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-all active:scale-95"
+            className="border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 px-4 min-h-[44px]"
           >
             Add
           </button>
         </div>
 
-        <div className="rounded-xl bg-white border-2 border-gray-200 p-3">
+        <div className="border-t border-rule">
           {supplies.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2 text-center">No supplies yet.</p>
+            <p className="text-body text-ink-35 py-4">No supplies yet</p>
           ) : (
             supplies.map(renderItem)
           )}

@@ -70,26 +70,26 @@ export default function ReviewDraftModal({ drinks, hostCode, onClose, onSuccess 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl max-h-[80vh] overflow-y-auto">
-        <h2 className="text-lg font-bold mb-4">Review Detected Drinks</h2>
-        <p className="text-sm text-gray-500 mb-4">Edit names, remove unwanted items, or add more before publishing.</p>
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <div className="w-full max-w-md border border-rule bg-paper p-6 max-h-[80vh] overflow-y-auto">
+        <h2 className="text-h3 font-zen font-medium text-ink mb-2">Review detected drinks</h2>
+        <p className="text-body text-ink-72 mb-4">Edit names, remove unwanted items, or add more before publishing.</p>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
         <div className="space-y-2 mb-4">
           {items.map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2 border-b border-rule">
               <input
                 type="text"
                 value={item}
                 onChange={(e) => updateItem(index, e.target.value)}
-                className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                className="flex-1 border-none bg-transparent px-1 py-2 text-list font-zen text-ink placeholder:text-ink-35 focus:outline-none min-h-[44px]"
                 placeholder="Drink name"
               />
               <button
                 onClick={() => removeItem(index)}
-                className="text-red-400 hover:text-red-600 text-lg px-2"
+                className="text-ink-50 min-w-[44px] min-h-[44px] flex items-center justify-center text-body"
                 aria-label="Remove drink"
               >
                 &times;
@@ -100,29 +100,29 @@ export default function ReviewDraftModal({ drinks, hostCode, onClose, onSuccess 
 
         <button
           onClick={addItem}
-          className="text-sm text-blue-600 hover:text-blue-800 mb-4 block"
+          className="underline text-meta text-ink min-h-[44px] mb-4 block"
         >
-          + Add another
+          Add another
         </button>
 
         <div className="flex gap-3">
           <button
             onClick={handlePublish}
             disabled={publishing}
-            className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            className="flex-1 border-[1.5px] border-live text-live font-mono text-meta uppercase h-12 min-h-[44px] disabled:opacity-50"
           >
             {publishing ? (
               <span className="flex items-center justify-center gap-2">
-                <LoadingSpinner size="sm" /> Publishing...
+                <LoadingSpinner size="sm" /> Publishing
               </span>
             ) : (
-              'Publish to Menu'
+              'Publish to menu'
             )}
           </button>
           <button
             onClick={onClose}
             disabled={publishing}
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="border border-ink text-ink font-mono text-meta uppercase h-12 px-4 min-h-[44px]"
           >
             Cancel
           </button>

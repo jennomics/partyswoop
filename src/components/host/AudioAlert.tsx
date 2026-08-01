@@ -22,8 +22,9 @@ export default function AudioAlert({ hostCode }: AudioAlertProps) {
 
   if (isEnabled) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[11px] text-green-600 bg-green-50 border border-green-200 rounded-lg px-2 py-1">
-        <span className="animate-pulse">🔔</span>
+      <span className="inline-flex items-center gap-1.5 min-h-[44px] px-2">
+        <span className="inline-block w-[6px] h-[6px] rounded-full bg-live" aria-hidden="true" />
+        <span className="font-mono text-meta text-ink-50">alerts on</span>
       </span>
     );
   }
@@ -31,9 +32,9 @@ export default function AudioAlert({ hostCode }: AudioAlertProps) {
   return (
     <button
       onClick={enable}
-      className="text-[11px] bg-gray-50 border border-orange-200 hover:border-orange-400 text-orange-700 font-medium rounded-lg px-2 py-1 transition-all active:scale-95"
+      className="underline font-mono text-meta text-ink min-h-[44px] px-2"
     >
-      🔇
+      enable alerts
     </button>
   );
 }
