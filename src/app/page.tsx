@@ -37,21 +37,24 @@ export default function HomePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center p-s-2">
       <div className="w-full max-w-sm text-center">
-        <h1 className="text-4xl font-bold mb-2">PartySwoop</h1>
-        <p className="text-gray-600 mb-8">
-          Party supply and drink request management made easy.
+        <h1 className="font-zen text-h1 font-medium mb-s-1">PartySwoop</h1>
+        <p className="text-ink-72 text-body mb-s-5">
+          Party supply and drink request management made simple.
         </p>
 
-        <form onSubmit={handleCreate} className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-s-3">
           <div>
+            <label className="block text-left font-mono text-meta uppercase tracking-wide text-ink-50 mb-s-1">
+              Party name
+            </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Party name (optional)"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="Optional"
+              className="w-full border-b border-rule bg-transparent px-0 py-s-1 text-body text-ink placeholder:text-ink-35 focus:border-ink focus:outline-none"
               disabled={loading}
             />
           </div>
@@ -61,14 +64,14 @@ export default function HomePage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-blue-600 px-6 py-3 text-lg font-medium text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
+            className="w-full h-12 border-[1.5px] border-live text-live text-body font-medium hover:bg-live-wash disabled:border-ink-35 disabled:text-ink-35 focus:outline-none focus:ring-1 focus:ring-ink"
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-s-1">
                 <LoadingSpinner size="sm" /> Creating...
               </span>
             ) : (
-              'Create a Party'
+              'Create a party'
             )}
           </button>
         </form>

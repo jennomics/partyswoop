@@ -129,7 +129,7 @@ export default function GuestPage() {
 
   if (loading) {
     return (
-      <main className="flex h-dvh items-center justify-center bg-gray-50">
+      <main className="flex h-dvh items-center justify-center bg-paper">
         <LoadingSpinner size="lg" />
       </main>
     );
@@ -137,7 +137,7 @@ export default function GuestPage() {
 
   if (error || !party) {
     return (
-      <main className="flex h-dvh flex-col items-center justify-center p-4 bg-gray-50">
+      <main className="flex h-dvh flex-col items-center justify-center p-s-2 bg-paper">
         <ErrorMessage message={error || 'This party does not exist or has ended.'} />
       </main>
     );
@@ -146,100 +146,84 @@ export default function GuestPage() {
   const drinks = party.menuItems.filter((i) => i.category === 'DRINK');
   const supplies = party.menuItems.filter((i) => i.category === 'SUPPLY');
 
+  const categories: { id: Category; label: string }[] = [
+    { id: 'drink', label: 'A drink' },
+    { id: 'supply', label: 'A supply' },
+    { id: 'song', label: 'A song' },
+    { id: 'other', label: 'Something else' },
+  ];
+
   return (
-    <main className="h-dvh bg-gray-50 flex flex-col overflow-hidden">
-      {/* Header - compact */}
-      <div className="shrink-0 pt-3 pb-2 px-4 text-center">
-        <p className="text-[11px] text-gray-400 leading-tight">{party.name}</p>
-        <h1 className="text-xl font-bold leading-tight">Need something?</h1>
+    <main className="h-dvh bg-paper flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 pt-s-3 pb-s-2 px-s-2">
+        <p className="font-mono text-meta uppercase tracking-wide text-ink-50">{party.name}</p>
+        <h1 className="font-zen text-h2 font-medium text-ink mt-s-1">Need something?</h1>
         {party.currentLocation && (
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            📍 {party.currentLocation.name}
+          <p className="font-mono text-meta text-ink-50 mt-s-1">
+            {party.currentLocation.name}
           </p>
         )}
       </div>
 
-      {/* Main content - category grid fills available space */}
-      <div className="flex-1 flex flex-col justify-center px-4 pb-2 min-h-0">
-        <div className="grid grid-cols-2 gap-2.5 max-w-xs mx-auto w-full">
-          <button
-            onClick={() => setActiveSheet('drink')}
-            className="flex flex-col items-center justify-center rounded-xl bg-white border-2 border-gray-200 py-5 px-3 hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
-            aria-label="Request a drink"
-          >
-            <span className="text-2xl mb-1">🍺</span>
-            <span className="text-xs font-medium">A Drink</span>
-          </button>
-          <button
-            onClick={() => setActiveSheet('supply')}
-            className="flex flex-col items-center justify-center rounded-xl bg-white border-2 border-gray-200 py-5 px-3 hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
-            aria-label="Request a supply"
-          >
-            <span className="text-2xl mb-1">🧻</span>
-            <span className="text-xs font-medium">A Supply</span>
-          </button>
-          <button
-            onClick={() => setActiveSheet('song')}
-            className="flex flex-col items-center justify-center rounded-xl bg-white border-2 border-gray-200 py-5 px-3 hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
-            aria-label="Request a song"
-          >
-            <span className="text-2xl mb-1">🎵</span>
-            <span className="text-xs font-medium">A Song</span>
-          </button>
-          <button
-            onClick={() => setActiveSheet('other')}
-            className="flex flex-col items-center justify-center rounded-xl bg-white border-2 border-gray-200 py-5 px-3 hover:border-blue-400 hover:shadow-md transition-all active:scale-95"
-            aria-label="Request something else"
-          >
-            <span className="text-2xl mb-1">💬</span>
-            <span className="text-xs font-medium">Other</span>
-          </button>
+      {/* Category rows */}
+      <div className="flex-1 flex flex-col px-s-2 min-h-0">
+        <div className="w-full max-w-sm mx-auto">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveSheet(cat.id)}
+              className="w-full flex items-center h-11 border-b border-rule text-body text-ink text-left hover:bg-live-wash focus:outline-none focus:ring-1 focus:ring-ink"
+              aria-label={`Request ${cat.label.toLowerCase()}`}
+            >
+              <span>{cat.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Queue links */}
-        <div className="flex justify-center gap-4 mt-3">
+        <div className="flex gap-s-3 mt-s-4 max-w-sm mx-auto w-full">
           <button
             onClick={() => setActiveSheet('songQueue')}
-            className="text-[11px] text-gray-400 hover:text-blue-600 transition-colors"
+            className="text-body text-ink-50 underline h-11 flex items-center focus:outline-none focus:ring-1 focus:ring-ink"
             aria-label="View song request queue"
           >
-            🎵 Song Queue
+            Song queue
           </button>
           <button
             onClick={() => setActiveSheet('supplyQueue')}
-            className="text-[11px] text-gray-400 hover:text-blue-600 transition-colors"
+            className="text-body text-ink-50 underline h-11 flex items-center focus:outline-none focus:ring-1 focus:ring-ink"
             aria-label="View supply request queue"
           >
-            🧻 Supply Queue
+            Supply queue
           </button>
         </div>
       </div>
 
-      {/* Bottom Sheet Overlay */}
+      {/* Panel overlay */}
       {activeSheet && (
         <div className="fixed inset-0 z-50 flex flex-col">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0"
             onClick={closeSheet}
             aria-hidden="true"
           />
-          {/* Sheet */}
-          <div className="relative mt-auto bg-white rounded-t-2xl max-h-[85dvh] flex flex-col shadow-xl">
-            {/* Handle + close */}
-            <div className="shrink-0 flex items-center justify-between px-4 pt-3 pb-2 border-b border-gray-100">
-              <div className="w-8" />
-              <div className="w-10 h-1 rounded-full bg-gray-300" />
+          {/* Panel */}
+          <div className="relative mt-auto bg-paper h-full flex flex-col border-t border-rule">
+            {/* Header with close */}
+            <div className="shrink-0 flex items-center justify-between px-s-2 pt-s-2 pb-s-1 border-b border-rule">
+              <div />
               <button
                 onClick={closeSheet}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 text-lg"
+                className="h-11 flex items-center text-body text-ink underline focus:outline-none focus:ring-1 focus:ring-ink"
                 aria-label="Close"
               >
-                &times;
+                Close
               </button>
             </div>
-            {/* Sheet content - scrollable */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 min-h-0">
+            {/* Panel content - scrollable */}
+            <div className="flex-1 overflow-y-auto px-s-2 py-s-2 min-h-0">
               {activeSheet === 'drink' && (
                 <DrinkRequest
                   guestCode={guestCode}
@@ -279,7 +263,7 @@ export default function GuestPage() {
                   />
                   <button
                     onClick={closeSheet}
-                    className="w-full mt-4 rounded-lg border border-gray-300 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="mt-s-3 h-11 text-body text-ink underline focus:outline-none focus:ring-1 focus:ring-ink"
                   >
                     Make another request
                   </button>

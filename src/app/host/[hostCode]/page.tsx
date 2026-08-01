@@ -39,14 +39,6 @@ interface Location {
 
 type Tab = 'requests' | 'views' | 'menu' | 'inventory' | 'locations';
 
-const TAB_ICONS: Record<Tab, string> = {
-  requests: '📋',
-  views: '👁',
-  menu: '🍽',
-  inventory: '📦',
-  locations: '📍',
-};
-
 export default function HostDashboard() {
   const params = useParams();
   const hostCode = params.hostCode as string;
@@ -98,7 +90,7 @@ export default function HostDashboard() {
 
   if (loading) {
     return (
-      <main className="flex h-dvh items-center justify-center bg-gray-50">
+      <main className="flex h-dvh items-center justify-center bg-paper">
         <LoadingSpinner size="lg" />
       </main>
     );
@@ -106,9 +98,9 @@ export default function HostDashboard() {
 
   if (error || !party) {
     return (
-      <main className="flex h-dvh flex-col items-center justify-center p-4 bg-gray-50">
+      <main className="flex h-dvh flex-col items-center justify-center p-s-2 bg-paper">
         <div className="text-center">
-          <h1 className="text-lg font-bold mb-2">Party Not Found</h1>
+          <h1 className="font-zen text-h3 font-medium mb-s-1">Party not found</h1>
           <ErrorMessage message={error || 'This party does not exist or has expired.'} />
         </div>
       </main>
@@ -120,32 +112,32 @@ export default function HostDashboard() {
     { id: 'views', label: 'Views' },
     { id: 'menu', label: 'Menu' },
     { id: 'inventory', label: 'Stock' },
-    { id: 'locations', label: 'Locs' },
+    { id: 'locations', label: 'Locations' },
   ];
 
   return (
-    <main className="h-dvh bg-gray-50 flex flex-col overflow-hidden">
-      {/* Compact Header */}
-      <div className="shrink-0 px-3 pt-2 pb-1.5 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between gap-2 max-w-sm mx-auto">
-          <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-sm font-bold truncate">{party.name}</h1>
-            <span className="text-[10px] text-gray-400 shrink-0">{timeRemaining}h</span>
+    <main className="h-dvh bg-paper flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 px-s-2 pt-s-2 pb-s-1 bg-paper border-b border-rule">
+        <div className="flex items-center justify-between gap-s-1 max-w-sm mx-auto">
+          <div className="flex items-center gap-s-1 min-w-0">
+            <h1 className="font-zen text-body font-medium truncate text-ink">{party.name}</h1>
+            <span className="font-mono text-meta text-ink-50 shrink-0">{timeRemaining}h</span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-s-1 shrink-0">
             <button
               onClick={copyGuestLink}
-              className="text-[11px] bg-gray-50 border border-gray-200 hover:border-blue-400 rounded-lg px-2 py-1 transition-all active:scale-95"
+              className="h-12 px-s-2 border border-ink text-ink text-meta font-mono uppercase tracking-wide hover:bg-live-wash focus:outline-none focus:ring-1 focus:ring-ink"
             >
-              {copied ? '✓' : '🔗 Share'}
+              {copied ? 'Copied' : 'Share link'}
             </button>
             <AudioAlert hostCode={hostCode} />
           </div>
         </div>
       </div>
 
-      {/* Content area - fills available space with internal scroll */}
-      <div className="flex-1 overflow-y-auto min-h-0 px-3 py-2">
+      {/* Content area */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-s-2 py-s-2">
         <div className="max-w-sm mx-auto">
           {activeTab === 'requests' && (
             <RequestQueue hostCode={hostCode} />
@@ -165,23 +157,22 @@ export default function HostDashboard() {
         </div>
       </div>
 
-      {/* Bottom Tab Bar - fixed */}
-      <nav className="shrink-0 bg-white border-t border-gray-200 safe-area-pb" aria-label="Host navigation">
+      {/* Bottom Tab Bar */}
+      <nav className="shrink-0 bg-paper border-t border-rule safe-area-pb" aria-label="Host navigation">
         <div className="flex max-w-sm mx-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center py-1.5 pt-2 transition-colors ${
+              className={`flex-1 flex items-center justify-center h-11 text-meta font-mono uppercase tracking-wide border-b-[1.5px] focus:outline-none focus:ring-1 focus:ring-ink ${
                 activeTab === tab.id
-                  ? 'text-blue-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'text-ink border-ink'
+                  : 'text-ink-50 border-transparent'
               }`}
               aria-label={tab.label}
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >
-              <span className="text-base leading-none">{TAB_ICONS[tab.id]}</span>
-              <span className="text-[10px] font-medium mt-0.5">{tab.label}</span>
+              {tab.label}
             </button>
           ))}
         </div>
