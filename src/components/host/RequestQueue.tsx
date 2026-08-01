@@ -294,24 +294,32 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         <>
           {/* Category grid - 2x2 bordered panels */}
           <div className="grid grid-cols-2 gap-4">
-            {groupedRequests.map((group) => (
-              <button
-                key={group.category}
-                type="button"
-                onClick={() => setSelectedCategory(group.category)}
-                className="border border-rule p-4 min-h-[120px] text-left flex flex-col"
-                aria-label={`${CATEGORY_LABELS[group.category]} - ${group.items.length} requests. Tap to view.`}
-              >
-                <span className="font-mono text-meta text-ink-50 uppercase">
-                  {CATEGORY_LABELS[group.category].toUpperCase()}
-                </span>
-                <span className={`font-mono text-h2 mt-2 ${
-                  group.items.length > 0 ? 'text-ink' : 'text-ink-35'
-                }`}>
-                  {group.items.length > 0 ? group.items.length : 'None'}
-                </span>
-              </button>
-            ))}
+            {groupedRequests.map((group) => {
+              const hasNew = group.items.some((r) => r.status === 'NEW');
+              return (
+                <button
+                  key={group.category}
+                  type="button"
+                  onClick={() => setSelectedCategory(group.category)}
+                  className="border border-rule p-4 min-h-[120px] text-left flex flex-col"
+                  aria-label={`${CATEGORY_LABELS[group.category]} - ${group.items.length} requests${hasNew ? ', new requests pending' : ''}. Tap to view.`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-meta text-ink-50 uppercase">
+                      {CATEGORY_LABELS[group.category].toUpperCase()}
+                    </span>
+                    {hasNew && (
+                      <span className="w-[6px] h-[6px] rounded-full bg-live" aria-label="New requests pending" />
+                    )}
+                  </div>
+                  <span className={`font-mono text-h2 mt-2 ${
+                    hasNew ? 'text-live' : group.items.length > 0 ? 'text-ink' : 'text-ink-35'
+                  }`}>
+                    {group.items.length > 0 ? group.items.length : 'None'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Completed requests - collapsed toggle */}
