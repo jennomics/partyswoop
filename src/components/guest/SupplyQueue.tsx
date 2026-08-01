@@ -58,11 +58,13 @@ export default function SupplyQueue({ guestCode, myRequestIds, partyName }: Supp
   // Handle SSE updates
   useEffect(() => {
     if (!sseEvent) return;
-    const data = sseEvent.data as Record<string, unknown>;
+    const data = sseEvent.data as Record<string, unknown> | null | undefined;
+    if (!data || typeof data !== 'object') return;
 
     if (sseEvent.type === 'request-update') {
-      const updatedId = data.id as string;
-      const updatedStatus = data.status as string;
+      const updatedId = data.id as string | undefined;
+      const updatedStatus = data.status as string | undefined;
+      if (!updatedId || !updatedStatus) return;
       setSupplies((prev) =>
         prev.map((supply) =>
           supply.id === updatedId ? { ...supply, status: updatedStatus } : supply
@@ -71,19 +73,26 @@ export default function SupplyQueue({ guestCode, myRequestIds, partyName }: Supp
     }
 
     if (sseEvent.type === 'new-request') {
-      const category = data.category as string;
-      if (category === 'SUPPLY') {
-        const newSupply: SupplyQueueItem = {
-          id: data.id as string,
-          item: data.item as string,
-          deliveryType: data.deliveryType as string,
-          deliveryValue: data.deliveryValue as string,
-          status: data.status as string,
-          createdAt: data.createdAt as string,
-          location: data.location as { id: string; name: string | null } | null,
-        };
-        setSupplies((prev) => [...prev, newSupply]);
-      }
+      const category = data.category as string | undefined;
+      if (category !== 'SUPPLY') return;
+      const id = data.id as string | undefined;
+      const item = data.item as string | undefined;
+      const deliveryType = data.deliveryType as string | undefined;
+      const deliveryValue = data.deliveryValue as string | undefined;
+      const status = data.status as string | undefined;
+      const createdAt = data.createdAt as string | undefined;
+      if (!id || !item || !deliveryType || !deliveryValue || !status || !createdAt) return;
+      const location = data.location as { id: string; name: string | null } | null | undefined;
+      const newSupply: SupplyQueueItem = {
+        id,
+        item,
+        deliveryType,
+        deliveryValue,
+        status,
+        createdAt,
+        location: location ?? null,
+      };
+      setSupplies((prev) => [...prev, newSupply]);
     }
   }, [sseEvent]);
 

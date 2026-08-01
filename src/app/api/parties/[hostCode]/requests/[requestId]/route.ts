@@ -3,7 +3,7 @@ import { getDb } from '@/lib/db';
 import { parties, requests, menuItems } from '@/lib/schema';
 import { sseEventBus } from '@/lib/sse';
 import { validateStatusTransition } from '@/lib/validation';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gt, sql } from 'drizzle-orm';
 import type { RequestStatus } from '@/lib/validation';
 
 export async function PATCH(
@@ -51,35 +51,41 @@ export async function PATCH(
       .where(eq(requests.id, requestId))
       .returning();
 
-    // Auto-decrement inventory when a DRINK or SUPPLY request is marked DONE
+    // Auto-decrement inventory when a DRINK or SUPPLY request is marked DONE.
+    // NOTE: Item matching is by name. If the host renames a menu item after a request
+    // is submitted, the decrement will silently fail. Storing menuItemId on requests
+    // would require a schema migration and is tracked as a future improvement.
     if (
       body.status === 'DONE' &&
       (existingRequest.category === 'DRINK' || existingRequest.category === 'SUPPLY')
     ) {
-      const matchingItem = await db.query.menuItems.findFirst({
-        where: and(
-          eq(menuItems.partyId, party.id),
-          eq(menuItems.name, existingRequest.item)
-        ),
-      });
+      // Use a single atomic UPDATE with a WHERE quantity > 0 guard to prevent
+      // race conditions from concurrent fulfillments of the same item.
+      const [updatedItem] = await db
+        .update(menuItems)
+        .set({ quantity: sql`${menuItems.quantity} - 1` })
+        .where(
+          and(
+            eq(menuItems.partyId, party.id),
+            eq(menuItems.name, existingRequest.item),
+            gt(menuItems.quantity, 0)
+          )
+        )
+        .returning();
 
-      if (matchingItem && matchingItem.quantity !== null && matchingItem.quantity > 0) {
-        const newQuantity = matchingItem.quantity - 1;
-        const updateData: { quantity: number; available?: boolean } = { quantity: newQuantity };
-
-        if (newQuantity === 0) {
-          updateData.available = false;
+      if (updatedItem) {
+        // If quantity hit 0, mark item as unavailable
+        if (updatedItem.quantity === 0) {
+          await db
+            .update(menuItems)
+            .set({ available: false })
+            .where(eq(menuItems.id, updatedItem.id));
         }
-
-        const [updatedItem] = await db
-          .update(menuItems)
-          .set(updateData)
-          .where(eq(menuItems.id, matchingItem.id))
-          .returning();
 
         // Publish inventory-update SSE event
         sseEventBus.publish(party.id, 'inventory-update', {
           ...updatedItem,
+          available: updatedItem.quantity === 0 ? false : updatedItem.available,
           isLowStock:
             updatedItem.quantity !== null &&
             updatedItem.quantity > 0 &&

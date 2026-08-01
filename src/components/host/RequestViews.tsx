@@ -50,7 +50,7 @@ function groupRequests(requests: RequestItem[], groupBy: GroupBy): Record<string
     let key: string;
     switch (groupBy) {
       case 'guest':
-        key = req.deliveryType === 'NAME' ? req.deliveryValue : 'Unknown Guest';
+        key = req.deliveryType === 'NAME' ? req.deliveryValue : 'Location-based Deliveries';
         break;
       case 'location':
         key = req.location?.name || req.deliveryValue || 'No Location';

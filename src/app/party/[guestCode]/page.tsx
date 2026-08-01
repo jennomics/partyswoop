@@ -54,8 +54,41 @@ export default function GuestPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category>(null);
   const [submittedRequest, setSubmittedRequest] = useState<SubmittedRequest | null>(null);
   const [currentView, setCurrentView] = useState<View>('main');
-  const [myRequestIds, setMyRequestIds] = useState<string[]>([]);
-  const [mySupplyRequestIds, setMySupplyRequestIds] = useState<string[]>([]);
+  const [myRequestIds, setMyRequestIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = sessionStorage.getItem(`partyswoop:songIds:${guestCode}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [mySupplyRequestIds, setMySupplyRequestIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = sessionStorage.getItem(`partyswoop:supplyIds:${guestCode}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist myRequestIds to sessionStorage whenever they change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`partyswoop:songIds:${guestCode}`, JSON.stringify(myRequestIds));
+    } catch {
+      // sessionStorage may be unavailable in some contexts
+    }
+  }, [myRequestIds, guestCode]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`partyswoop:supplyIds:${guestCode}`, JSON.stringify(mySupplyRequestIds));
+    } catch {
+      // sessionStorage may be unavailable in some contexts
+    }
+  }, [mySupplyRequestIds, guestCode]);
 
   const fetchParty = useCallback(async () => {
     try {

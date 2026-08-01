@@ -48,12 +48,14 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
   // Handle SSE updates
   useEffect(() => {
     if (!sseEvent) return;
-    const data = sseEvent.data as Record<string, unknown>;
+    const data = sseEvent.data as Record<string, unknown> | null | undefined;
+    if (!data || typeof data !== 'object') return;
 
     if (sseEvent.type === 'request-update') {
       // Update status of an existing song in the queue
-      const updatedId = data.id as string;
-      const updatedStatus = data.status as string;
+      const updatedId = data.id as string | undefined;
+      const updatedStatus = data.status as string | undefined;
+      if (!updatedId || !updatedStatus) return;
       setSongs((prev) =>
         prev.map((song) =>
           song.id === updatedId ? { ...song, status: updatedStatus } : song
@@ -63,17 +65,16 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
 
     if (sseEvent.type === 'new-request') {
       // Add new song request to the queue if it is a SONG category
-      const category = data.category as string;
-      if (category === 'SONG') {
-        const newSong: SongQueueItem = {
-          id: data.id as string,
-          item: data.item as string,
-          deliveryValue: data.deliveryValue as string,
-          status: data.status as string,
-          createdAt: data.createdAt as string,
-        };
-        setSongs((prev) => [...prev, newSong]);
-      }
+      const category = data.category as string | undefined;
+      if (category !== 'SONG') return;
+      const id = data.id as string | undefined;
+      const item = data.item as string | undefined;
+      const deliveryValue = data.deliveryValue as string | undefined;
+      const status = data.status as string | undefined;
+      const createdAt = data.createdAt as string | undefined;
+      if (!id || !item || !deliveryValue || !status || !createdAt) return;
+      const newSong: SongQueueItem = { id, item, deliveryValue, status, createdAt };
+      setSongs((prev) => [...prev, newSong]);
     }
   }, [sseEvent]);
 
