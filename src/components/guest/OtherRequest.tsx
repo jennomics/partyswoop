@@ -51,30 +51,33 @@ export default function OtherRequest({ guestCode, onSubmitted }: OtherRequestPro
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">What do you need?</h2>
+      <h2 className="font-zen font-medium text-h3 text-ink mb-s-3">What do you need</h2>
 
       {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Describe your request"
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:outline-none focus:border-blue-500"
-          autoFocus
-        />
+      <form onSubmit={handleSubmit} className="space-y-s-3">
+        <div>
+          <label className="font-mono text-meta text-ink-50 uppercase block mb-s-1">Describe your request</label>
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Describe your request"
+            className="w-full border-0 border-b border-rule bg-transparent px-0 py-s-1 font-zen text-body text-ink placeholder:text-ink-35 focus:outline-none focus:border-b-ink"
+            autoFocus
+          />
+        </div>
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="w-full h-12 border-[1.5px] border-live bg-transparent text-live font-zen font-medium text-body disabled:opacity-50 transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)] focus:outline-none focus:ring-1 focus:ring-ink"
         >
           {submitting ? (
-            <span className="flex items-center justify-center gap-2">
+            <span className="flex items-center justify-center gap-s-1">
               <LoadingSpinner size="sm" /> Sending...
             </span>
           ) : (
-            'Send Request'
+            'Send request'
           )}
         </button>
       </form>

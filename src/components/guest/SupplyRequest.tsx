@@ -61,28 +61,28 @@ export default function SupplyRequest({ guestCode, supplies, currentLocation, on
 
   if (supplies.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No supplies available right now.</p>
+      <div className="py-s-4">
+        <p className="text-ink-50 font-zen text-body">No supplies available right now.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">What do you need?</h2>
-      <p className="text-sm text-gray-500 mb-4">Tap to request</p>
+      <h2 className="font-zen font-medium text-h3 text-ink mb-s-1">What do you need</h2>
+      <p className="font-mono text-meta text-ink-50 uppercase mb-s-3">Tap to request</p>
 
       {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
-      <div className="space-y-2">
+      <div>
         {supplies.map((supply) => (
           <button
             key={supply.id}
             onClick={() => handleTap(supply)}
             disabled={submitting === supply.id}
-            className="w-full rounded-lg bg-white border-2 border-gray-200 px-4 py-4 text-left font-medium hover:border-blue-400 hover:shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
+            className="w-full border-b border-rule px-0 py-s-2 text-left font-zen text-list text-ink min-h-[44px] hover:text-ink-72 transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)] disabled:opacity-50"
           >
-            🧻 {supply.name}
+            {supply.name}
           </button>
         ))}
       </div>

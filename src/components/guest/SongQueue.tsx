@@ -45,14 +45,12 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
     fetchSongs();
   }, [fetchSongs]);
 
-  // Handle SSE updates
   useEffect(() => {
     if (!sseEvent) return;
     const data = sseEvent.data as Record<string, unknown> | null | undefined;
     if (!data || typeof data !== 'object') return;
 
     if (sseEvent.type === 'request-update') {
-      // Update status of an existing song in the queue
       const updatedId = data.id as string | undefined;
       const updatedStatus = data.status as string | undefined;
       if (!updatedId || !updatedStatus) return;
@@ -64,7 +62,6 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
     }
 
     if (sseEvent.type === 'new-request') {
-      // Add new song request to the queue if it is a SONG category
       const category = data.category as string | undefined;
       if (category !== 'SONG') return;
       const id = data.id as string | undefined;
@@ -80,7 +77,7 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8" role="status" aria-label="Loading song queue">
+      <div className="flex justify-center py-s-4" role="status" aria-label="Loading song queue">
         <LoadingSpinner size="md" />
       </div>
     );
@@ -100,73 +97,62 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
   const isMine = (id: string) => myRequestIds.includes(id);
 
   return (
-    <div className="space-y-6" role="region" aria-label="Song request queue">
+    <div role="region" aria-label="Song request queue">
       {/* Now Playing / Up Next */}
-      <section aria-labelledby="now-playing-heading">
+      <section aria-labelledby="now-playing-heading" className="mb-s-4">
         <h3
           id="now-playing-heading"
-          className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2"
+          className="font-mono text-meta text-ink-50 uppercase mb-s-2"
         >
-          Now Playing / Up Next
+          Now playing
         </h3>
         {nowPlaying ? (
           <div
-            className={`rounded-lg border-2 p-4 ${
-              isMine(nowPlaying.id)
-                ? 'border-blue-400 bg-blue-50'
-                : 'border-gray-200 bg-white'
-            }`}
+            className="bg-live px-s-2 py-s-2 min-h-[44px] flex items-center"
             aria-current={isMine(nowPlaying.id) ? 'true' : undefined}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl" aria-hidden="true">🎶</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-lg truncate">{nowPlaying.item}</p>
-                <p className="text-sm text-gray-500 truncate">
-                  Requested by {nowPlaying.deliveryValue}
-                </p>
-              </div>
-              {isMine(nowPlaying.id) && (
-                <span className="shrink-0 text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                  You
-                </span>
-              )}
+            <div className="flex-1 min-w-0">
+              <p className="font-zen font-medium text-list text-white truncate">{nowPlaying.item}</p>
+              <p className="font-mono text-meta text-white/70 truncate">
+                {nowPlaying.deliveryValue}
+              </p>
             </div>
+            {isMine(nowPlaying.id) && (
+              <span className="shrink-0 font-mono text-meta text-white/70 ml-s-2">
+                You
+              </span>
+            )}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm italic">No songs in queue yet</p>
+          <p className="text-ink-35 font-zen text-body">No songs in queue yet</p>
         )}
       </section>
 
       {/* In Queue */}
-      <section aria-labelledby="in-queue-heading">
+      <section aria-labelledby="in-queue-heading" className="mb-s-4">
         <h3
           id="in-queue-heading"
-          className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2"
+          className="font-mono text-meta text-ink-50 uppercase mb-s-2"
         >
-          In Queue {inQueue.length > 0 && `(${inQueue.length})`}
+          In queue {inQueue.length > 0 && `(${inQueue.length})`}
         </h3>
         {inQueue.length > 0 ? (
-          <ol className="space-y-2" role="list" aria-label="Songs waiting in queue">
+          <ol role="list" aria-label="Songs waiting in queue">
             {inQueue.map((song, index) => (
               <li
                 key={song.id}
-                className={`flex items-center gap-3 rounded-lg border p-3 ${
-                  isMine(song.id)
-                    ? 'border-blue-400 bg-blue-50'
-                    : 'border-gray-200 bg-white'
-                }`}
+                className="flex items-center border-b border-rule py-s-2 min-h-[44px]"
                 aria-label={`Position ${index + 2}: ${song.item} by ${song.deliveryValue}${isMine(song.id) ? ' (your request)' : ''}`}
               >
-                <span className="shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600">
+                <span className="shrink-0 w-8 font-mono text-meta text-ink">
                   {index + 2}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{song.item}</p>
-                  <p className="text-xs text-gray-500 truncate">{song.deliveryValue}</p>
+                  <p className="font-zen text-list text-ink truncate">{song.item}</p>
+                  <p className="font-mono text-meta text-ink-50 truncate">{song.deliveryValue}</p>
                 </div>
                 {isMine(song.id) && (
-                  <span className="shrink-0 text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  <span className="shrink-0 font-mono text-meta text-ink-50 ml-s-2">
                     You
                   </span>
                 )}
@@ -174,37 +160,32 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
             ))}
           </ol>
         ) : (
-          <p className="text-gray-400 text-sm italic">No more songs waiting</p>
+          <p className="text-ink-35 font-zen text-body">No more songs waiting</p>
         )}
       </section>
 
       {/* Already Played */}
       {alreadyPlayed.length > 0 && (
-        <section aria-labelledby="already-played-heading">
+        <section aria-labelledby="already-played-heading" className="mb-s-4">
           <h3
             id="already-played-heading"
-            className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2"
+            className="font-mono text-meta text-ink-50 uppercase mb-s-2"
           >
-            Already Played ({alreadyPlayed.length})
+            Already played ({alreadyPlayed.length})
           </h3>
-          <ul className="space-y-2" role="list" aria-label="Songs already played">
+          <ul role="list" aria-label="Songs already played">
             {alreadyPlayed.map((song) => (
               <li
                 key={song.id}
-                className={`flex items-center gap-3 rounded-lg border p-3 opacity-60 ${
-                  isMine(song.id)
-                    ? 'border-blue-300 bg-blue-50/50'
-                    : 'border-gray-100 bg-gray-50'
-                }`}
+                className="flex items-center border-b border-rule py-s-2 min-h-[44px]"
                 aria-label={`${song.item} by ${song.deliveryValue} - played${isMine(song.id) ? ' (your request)' : ''}`}
               >
-                <span className="shrink-0 text-lg" aria-hidden="true">&#10003;</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate line-through text-gray-500">{song.item}</p>
-                  <p className="text-xs text-gray-400 truncate">{song.deliveryValue}</p>
+                  <p className="font-zen text-list text-ink-35 line-through truncate">{song.item}</p>
+                  <p className="font-mono text-meta text-ink-35 truncate">{song.deliveryValue}</p>
                 </div>
                 {isMine(song.id) && (
-                  <span className="shrink-0 text-xs font-medium bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                  <span className="shrink-0 font-mono text-meta text-ink-50 ml-s-2">
                     You
                   </span>
                 )}
@@ -216,9 +197,8 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
 
       {/* Empty state */}
       {songs.length === 0 && (
-        <div className="text-center py-8">
-          <span className="text-4xl" aria-hidden="true">🎵</span>
-          <p className="text-gray-500 mt-2">No song requests yet. Be the first!</p>
+        <div className="py-s-4">
+          <p className="text-ink-50 font-zen text-body">No song requests yet</p>
         </div>
       )}
     </div>

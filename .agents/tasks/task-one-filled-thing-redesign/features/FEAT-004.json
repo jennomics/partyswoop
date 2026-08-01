@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "refactor",
   "description": "Restyle all guest components (DrinkRequest, SupplyRequest, SongRequest, OtherRequest, RequestTracker, SongQueue, SupplyQueue) to follow the One Filled Thing style guide. Active/current items get the Live fill block. Everything else is ruled rows. No emoji, no rounded corners, no shadows, no colored fills.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Restyle src/components/guest/DrinkRequest.tsx: Remove emoji from drink list items. Drink selection buttons become ruled rows (1px rule border-bottom, full width, left-aligned text, 44px+ height). Remove rounded-lg, border-blue-400 hover, shadow-sm, active:scale. Selected state (delivery type) uses 1.5px ink border-left instead of blue border + blue fill. Input fields use underline style (border-bottom 1px rule). Submit button is primary (1.5px live outline, live text, 48px, no fill). Remove bg-blue-50 selected states.",
     "Restyle src/components/guest/SupplyRequest.tsx: Remove emoji from supply items. Items become ruled rows (1px rule border-bottom, left-aligned, 44px+). Remove rounded-lg, border-blue-400 hover, shadow-sm. Heading in zen 500. Subtext at ink-50.",

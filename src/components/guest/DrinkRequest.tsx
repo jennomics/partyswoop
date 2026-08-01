@@ -74,8 +74,8 @@ export default function DrinkRequest({ guestCode, drinks, currentLocation, onSub
 
   if (drinks.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No drinks available right now.</p>
+      <div className="py-s-4">
+        <p className="text-ink-50 font-zen text-body">No drinks available right now.</p>
       </div>
     );
   }
@@ -84,15 +84,15 @@ export default function DrinkRequest({ guestCode, drinks, currentLocation, onSub
   if (!selectedDrink) {
     return (
       <div>
-        <h2 className="text-xl font-bold mb-4">Pick a drink</h2>
-        <div className="space-y-2">
+        <h2 className="font-zen font-medium text-h3 text-ink mb-s-3">Pick a drink</h2>
+        <div>
           {drinks.map((drink) => (
             <button
               key={drink.id}
               onClick={() => setSelectedDrink(drink.name)}
-              className="w-full rounded-lg bg-white border-2 border-gray-200 px-4 py-4 text-left font-medium hover:border-blue-400 hover:shadow-sm transition-all active:scale-[0.98]"
+              className="w-full border-b border-rule px-0 py-s-2 text-left font-zen text-list text-ink min-h-[44px] hover:text-ink-72 transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)]"
             >
-              🍺 {drink.name}
+              {drink.name}
             </button>
           ))}
         </div>
@@ -103,69 +103,75 @@ export default function DrinkRequest({ guestCode, drinks, currentLocation, onSub
   // Step 2: Delivery target
   return (
     <div>
-      <h2 className="text-xl font-bold mb-2">How should we get it to you?</h2>
-      <p className="text-sm text-gray-500 mb-4">Selected: {selectedDrink}</p>
+      <h2 className="font-zen font-medium text-h3 text-ink mb-s-1">How should we get it to you</h2>
+      <p className="font-mono text-meta text-ink-50 uppercase mb-s-3">Selected: {selectedDrink}</p>
 
       {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
-      <div className="space-y-3 mb-4">
+      <div className="mb-s-3">
         {currentLocation && (
           <button
             onClick={() => setDeliveryType('LOCATION')}
-            className={`w-full rounded-lg border-2 px-4 py-4 text-left transition-all ${
+            className={`w-full border-b px-0 py-s-2 text-left min-h-[44px] transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)] ${
               deliveryType === 'LOCATION'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 bg-white hover:border-blue-300'
+                ? 'border-l-[1.5px] border-l-ink border-b-rule pl-s-2'
+                : 'border-rule'
             }`}
           >
-            <span className="font-medium">📍 Bring it here</span>
-            <span className="block text-sm text-gray-500 mt-0.5">{currentLocation.name}</span>
+            <span className="font-zen text-list text-ink block">Bring it here</span>
+            <span className="font-mono text-meta text-ink-50 block mt-[4px]">{currentLocation.name}</span>
           </button>
         )}
 
         <button
           onClick={() => setDeliveryType('NAME')}
-          className={`w-full rounded-lg border-2 px-4 py-4 text-left transition-all ${
+          className={`w-full border-b px-0 py-s-2 text-left min-h-[44px] transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)] ${
             deliveryType === 'NAME'
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 bg-white hover:border-blue-300'
+              ? 'border-l-[1.5px] border-l-ink border-b-rule pl-s-2'
+              : 'border-rule'
           }`}
         >
-          <span className="font-medium">👋 Find me</span>
-          <span className="block text-sm text-gray-500 mt-0.5">Tell us your name</span>
+          <span className="font-zen text-list text-ink block">Find me</span>
+          <span className="font-mono text-meta text-ink-50 block mt-[4px]">Tell us your name</span>
         </button>
       </div>
 
       {deliveryType === 'NAME' && (
-        <input
-          type="text"
-          value={deliveryName}
-          onChange={(e) => setDeliveryName(e.target.value)}
-          placeholder="Your name"
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 mb-4 focus:outline-none focus:border-blue-500"
-          autoFocus
-        />
+        <div className="mb-s-3">
+          <label className="font-mono text-meta text-ink-50 uppercase block mb-s-1">Your name</label>
+          <input
+            type="text"
+            value={deliveryName}
+            onChange={(e) => setDeliveryName(e.target.value)}
+            placeholder="Your name"
+            className="w-full border-0 border-b border-rule bg-transparent px-0 py-s-1 font-zen text-body text-ink placeholder:text-ink-35 focus:outline-none focus:border-b-ink"
+            autoFocus
+          />
+        </div>
       )}
 
-      <input
-        type="text"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Add a note (optional)"
-        className="w-full rounded-lg border border-gray-300 px-4 py-3 mb-4 text-sm focus:outline-none focus:border-blue-500"
-      />
+      <div className="mb-s-3">
+        <label className="font-mono text-meta text-ink-50 uppercase block mb-s-1">Note (optional)</label>
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Add a note"
+          className="w-full border-0 border-b border-rule bg-transparent px-0 py-s-1 font-zen text-body text-ink placeholder:text-ink-35 focus:outline-none focus:border-b-ink"
+        />
+      </div>
 
       <button
         onClick={handleSubmit}
         disabled={submitting}
-        className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+        className="w-full h-12 border-[1.5px] border-live bg-transparent text-live font-zen font-medium text-body disabled:opacity-50 transition-colors duration-[180ms] ease-[cubic-bezier(.2,.6,.3,1)] focus:outline-none focus:ring-1 focus:ring-ink"
       >
         {submitting ? (
-          <span className="flex items-center justify-center gap-2">
+          <span className="flex items-center justify-center gap-s-1">
             <LoadingSpinner size="sm" /> Sending...
           </span>
         ) : (
-          'Send Request'
+          'Send request'
         )}
       </button>
     </div>

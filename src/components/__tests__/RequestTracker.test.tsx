@@ -42,49 +42,41 @@ describe('RequestTracker', () => {
     expect(screen.queryByText('Extra cold please')).not.toBeInTheDocument();
   });
 
-  it('renders the category icon', () => {
-    render(<RequestTracker {...defaultProps} />);
-    // DRINK category shows beer emoji
-    expect(screen.getByText('🍺')).toBeInTheDocument();
+  it('does not render any emoji', () => {
+    const { container } = render(<RequestTracker {...defaultProps} />);
+    const emojiPattern = /[\u{1F300}-\u{1F9FF}]/u;
+    expect(emojiPattern.test(container.textContent || '')).toBe(false);
   });
 
   it('shows initial status message for NEW state', () => {
     render(<RequestTracker {...defaultProps} />);
-    expect(screen.getByText('Your request has been sent to the host!')).toBeInTheDocument();
+    expect(screen.getByText('Your request has been sent to the host.')).toBeInTheDocument();
   });
 
-  it('has a visually distinct Seen step with special styling classes', () => {
-    // The component in NEW state shows the Seen label
+  it('has progress tracker with step labels separated by rules', () => {
     const { container } = render(<RequestTracker {...defaultProps} />);
 
-    // The Seen step has special visual treatment when it becomes current.
-    // In the component code, when isSeen && isCurrent, it gets:
-    // - larger size (w-14 h-14)
-    // - yellow background (bg-yellow-400)
-    // - shadow-lg
-    // - animate-bounce
-    // Let's verify the Seen label is rendered and the structure is correct
-    const seenLabel = screen.getByText('Seen');
-    expect(seenLabel).toBeInTheDocument();
+    // Verify rule lines exist between steps
+    const ruleLines = container.querySelectorAll('.bg-rule');
+    expect(ruleLines.length).toBeGreaterThan(0);
 
-    // Verify the step structure exists with the correct number of step containers
-    const stepContainers = container.querySelectorAll('.flex.flex-col.items-center.flex-1');
-    expect(stepContainers).toHaveLength(3);
+    // Verify step labels use mono font
+    const sentLabel = screen.getByText('Sent');
+    expect(sentLabel).toHaveClass('font-mono');
   });
 
-  it('Seen step has visually prominent classes when it would be the current step', () => {
-    // The component renders with special classes for the SEEN step when current.
-    // We verify the component source includes the yellow/bounce styling for SEEN.
-    // Since we can only test the initial NEW state without triggering SSE,
-    // we verify the structure renders the unique classes in the component output.
+  it('current step uses live color and future steps use ink-35', () => {
     const { container } = render(<RequestTracker {...defaultProps} />);
 
-    // In NEW state, the first step (Sent) is current - it has bg-blue-500 and shadow-md
-    const blueCircles = container.querySelectorAll('.bg-blue-500');
-    expect(blueCircles.length).toBeGreaterThan(0);
+    // In NEW state, the first step (Sent) is current - it has text-live
+    const sentLabel = screen.getByText('Sent');
+    expect(sentLabel).toHaveClass('text-live');
 
-    // The Seen step label should not be bold/highlighted in NEW state
+    // The Seen and Done steps should be ink-35 (future steps)
     const seenLabel = screen.getByText('Seen');
-    expect(seenLabel).toHaveClass('text-gray-400');
+    expect(seenLabel).toHaveClass('text-ink-35');
+
+    const doneLabel = screen.getByText('Done');
+    expect(doneLabel).toHaveClass('text-ink-35');
   });
 });
