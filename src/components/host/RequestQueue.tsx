@@ -126,9 +126,81 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   const activeRequests = requests.filter((r) => r.status !== 'DONE');
   const doneRequests = requests.filter((r) => r.status === 'DONE');
 
-  // Sort newest first
+  // Sort newest first within each group
   activeRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   doneRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Group active requests by category
+  const categories: RequestItem['category'][] = ['DRINK', 'SUPPLY', 'SONG', 'OTHER'];
+  const CATEGORY_LABELS: Record<string, string> = {
+    DRINK: 'Drinks',
+    SUPPLY: 'Supplies',
+    SONG: 'Songs',
+    OTHER: 'Other',
+  };
+  const groupedRequests = categories
+    .map((cat) => ({
+      category: cat,
+      items: activeRequests.filter((r) => r.category === cat),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  function renderRequestCard(req: RequestItem) {
+    return (
+      <div
+        key={req.id}
+        className={`rounded-xl border-2 p-4 transition-all ${
+          req.status === 'NEW'
+            ? 'border-blue-300 bg-white shadow-sm'
+            : 'border-gray-200 bg-white'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">{CATEGORY_ICONS[req.category]}</span>
+              <span className="font-medium truncate">{req.item}</span>
+            </div>
+            {req.note && (
+              <p className="text-sm text-gray-600 ml-7">Note: {req.note}</p>
+            )}
+            <p className="text-sm text-gray-500 ml-7">
+              {req.deliveryType === 'LOCATION'
+                ? `📍 ${req.location?.name || req.deliveryValue}`
+                : `👤 ${req.deliveryValue}`}
+            </p>
+            <p className="text-xs text-gray-400 ml-7 mt-1">{timeAgo(req.createdAt)}</p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {req.status === 'NEW' && (
+              <>
+                <button
+                  onClick={() => updateStatus(req.id, 'SEEN')}
+                  className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
+                >
+                  Seen
+                </button>
+                <button
+                  onClick={() => updateStatus(req.id, 'DONE')}
+                  className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+                >
+                  Done
+                </button>
+              </>
+            )}
+            {req.status === 'SEEN' && (
+              <button
+                onClick={() => updateStatus(req.id, 'DONE')}
+                className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
+              >
+                Done
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -141,59 +213,15 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
         </div>
       )}
 
-      {/* Active requests */}
-      {activeRequests.map((req) => (
-        <div
-          key={req.id}
-          className={`rounded-xl border-2 p-4 transition-all ${
-            req.status === 'NEW'
-              ? 'border-blue-300 bg-white shadow-sm'
-              : 'border-gray-200 bg-white'
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">{CATEGORY_ICONS[req.category]}</span>
-                <span className="font-medium truncate">{req.item}</span>
-              </div>
-              {req.note && (
-                <p className="text-sm text-gray-600 ml-7">Note: {req.note}</p>
-              )}
-              <p className="text-sm text-gray-500 ml-7">
-                {req.deliveryType === 'LOCATION'
-                  ? `📍 ${req.location?.name || req.deliveryValue}`
-                  : `👤 ${req.deliveryValue}`}
-              </p>
-              <p className="text-xs text-gray-400 ml-7 mt-1">{timeAgo(req.createdAt)}</p>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              {req.status === 'NEW' && (
-                <>
-                  <button
-                    onClick={() => updateStatus(req.id, 'SEEN')}
-                    className="rounded-lg bg-yellow-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-yellow-600 transition-all active:scale-95"
-                  >
-                    Seen
-                  </button>
-                  <button
-                    onClick={() => updateStatus(req.id, 'DONE')}
-                    className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
-                  >
-                    Done
-                  </button>
-                </>
-              )}
-              {req.status === 'SEEN' && (
-                <button
-                  onClick={() => updateStatus(req.id, 'DONE')}
-                  className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 transition-all active:scale-95"
-                >
-                  Done
-                </button>
-              )}
-            </div>
-          </div>
+      {/* Active requests grouped by category */}
+      {groupedRequests.map((group) => (
+        <div key={group.category} className="space-y-2">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 px-1">
+            <span>{CATEGORY_ICONS[group.category]}</span>
+            <span>{CATEGORY_LABELS[group.category]}</span>
+            <span className="text-xs font-normal text-gray-400">({group.items.length})</span>
+          </h3>
+          {group.items.map(renderRequestCard)}
         </div>
       ))}
 

@@ -116,7 +116,7 @@ export default function HostDashboard() {
   }
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'requests', label: 'Queue' },
+    { id: 'requests', label: 'Requests' },
     { id: 'views', label: 'Views' },
     { id: 'menu', label: 'Menu' },
     { id: 'inventory', label: 'Stock' },
