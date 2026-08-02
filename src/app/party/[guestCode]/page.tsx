@@ -166,17 +166,19 @@ export default function GuestPage() {
         )}
       </div>
 
-      {/* Category rows */}
+      {/* Category grid - 2x2 bordered panels matching host design */}
       <div className="flex-1 flex flex-col px-s-2 min-h-0">
-        <div className="w-full max-w-sm mx-auto">
+        <div className="w-full max-w-sm mx-auto grid grid-cols-2 gap-4">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveSheet(cat.id)}
-              className="w-full flex items-center h-11 border-b border-rule text-body text-ink text-left focus:outline-none focus:ring-1 focus:ring-ink"
+              className="border border-rule p-4 min-h-[120px] text-left flex flex-col focus:outline-none focus:ring-1 focus:ring-ink"
               aria-label={`Request ${cat.label.toLowerCase()}`}
             >
-              <span>{cat.label}</span>
+              <span className="font-mono text-meta text-ink-50 uppercase">
+                {cat.label.toUpperCase()}
+              </span>
             </button>
           ))}
         </div>
