@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { describe, it, expect, vi } from 'vitest';
 import ErrorMessage from '../ui/ErrorMessage';
 
 describe('ErrorMessage', () => {
@@ -28,14 +28,14 @@ describe('ErrorMessage', () => {
   });
 
   it('renders dismiss button when onDismiss is provided', () => {
-    const onDismiss = jest.fn();
+    const onDismiss = vi.fn();
     render(<ErrorMessage message="Error" onDismiss={onDismiss} />);
     const button = screen.getByLabelText('Dismiss error');
     expect(button).toBeInTheDocument();
   });
 
   it('calls onDismiss when dismiss button is clicked', () => {
-    const onDismiss = jest.fn();
+    const onDismiss = vi.fn();
     render(<ErrorMessage message="Error" onDismiss={onDismiss} />);
     fireEvent.click(screen.getByLabelText('Dismiss error'));
     expect(onDismiss).toHaveBeenCalledTimes(1);

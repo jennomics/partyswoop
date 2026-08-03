@@ -10,7 +10,7 @@ export async function GET(
   try {
     const { guestCode } = await params;
     const { searchParams } = new URL(request.url);
-    const locationCode = searchParams.get('location');
+    const locationCode = searchParams.get('loc') || searchParams.get('location');
     const db = getDb();
 
     const party = await db.query.parties.findFirst({
@@ -51,7 +51,7 @@ export async function GET(
       currentLocation,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch party';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch party:', error);
+    return NextResponse.json({ error: 'Failed to fetch party.' }, { status: 500 });
   }
 }

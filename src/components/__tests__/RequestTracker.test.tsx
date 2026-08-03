@@ -1,15 +1,13 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { describe, it, expect, vi } from 'vitest';
 import RequestTracker from '../guest/RequestTracker';
 
-// Mock the useSSE hook
-jest.mock('@/hooks/useSSE', () => ({
-  useSSE: () => null,
-}));
-
 // Mock fetch for the polling behavior
-global.fetch = jest.fn();
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: async () => ({ status: 'NEW' }),
+});
 
 describe('RequestTracker', () => {
   const defaultProps = {
@@ -66,7 +64,7 @@ describe('RequestTracker', () => {
   });
 
   it('current step uses live color and future steps use ink-35', () => {
-    const { container } = render(<RequestTracker {...defaultProps} />);
+    render(<RequestTracker {...defaultProps} />);
 
     // In NEW state, the first step (Sent) is current - it has text-live
     const sentLabel = screen.getByText('Sent');

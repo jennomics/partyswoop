@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { parties, requests, menuItems } from '@/lib/schema';
-import { sseEventBus } from '@/lib/sse';
 import { validateStatusTransition } from '@/lib/validation';
 import { eq, and, gt, sql } from 'drizzle-orm';
 import type { RequestStatus } from '@/lib/validation';
@@ -35,7 +34,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, any>;
+    const body = await request.json() as Record<string, unknown>;
     const validation = validateStatusTransition(
       existingRequest.status as RequestStatus,
       body.status
@@ -45,53 +44,56 @@ export async function PATCH(
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const [updated] = await db
+    const newStatus = body.status as string;
+
+    // Use conditional UPDATE with WHERE status = expected to prevent race conditions.
+    // If another request already changed the status, 0 rows will be updated.
+    const updateResult = await db
       .update(requests)
-      .set({ status: body.status })
-      .where(eq(requests.id, requestId))
+      .set({ status: newStatus })
+      .where(
+        and(
+          eq(requests.id, requestId),
+          eq(requests.status, existingRequest.status)
+        )
+      )
       .returning();
 
+    if (updateResult.length === 0) {
+      return NextResponse.json(
+        { error: 'Request was already updated. Please refresh and try again.' },
+        { status: 409 }
+      );
+    }
+
     // Auto-decrement inventory when a DRINK or SUPPLY request is marked DONE.
-    // NOTE: Item matching is by name. If the host renames a menu item after a request
-    // is submitted, the decrement will silently fail. Storing menuItemId on requests
-    // would require a schema migration and is tracked as a future improvement.
+    // Use menuItemId for direct lookup when available, fall back to name matching.
     if (
-      body.status === 'DONE' &&
+      newStatus === 'DONE' &&
       (existingRequest.category === 'DRINK' || existingRequest.category === 'SUPPLY')
     ) {
-      // Use a single atomic UPDATE with a WHERE quantity > 0 guard to prevent
-      // race conditions from concurrent fulfillments of the same item.
-      const [updatedItem] = await db
-        .update(menuItems)
-        .set({ quantity: sql`${menuItems.quantity} - 1` })
-        .where(
-          and(
+      const menuItemCondition = existingRequest.menuItemId
+        ? and(
+            eq(menuItems.id, existingRequest.menuItemId),
+            gt(menuItems.quantity, 0)
+          )
+        : and(
             eq(menuItems.partyId, party.id),
             eq(menuItems.name, existingRequest.item),
             gt(menuItems.quantity, 0)
-          )
-        )
+          );
+
+      const [updatedItem] = await db
+        .update(menuItems)
+        .set({ quantity: sql`${menuItems.quantity} - 1` })
+        .where(menuItemCondition)
         .returning();
 
-      if (updatedItem) {
-        // If quantity hit 0, mark item as unavailable
-        if (updatedItem.quantity === 0) {
-          await db
-            .update(menuItems)
-            .set({ available: false })
-            .where(eq(menuItems.id, updatedItem.id));
-        }
-
-        // Publish inventory-update SSE event
-        sseEventBus.publish(party.id, 'inventory-update', {
-          ...updatedItem,
-          available: updatedItem.quantity === 0 ? false : updatedItem.available,
-          isLowStock:
-            updatedItem.quantity !== null &&
-            updatedItem.quantity > 0 &&
-            updatedItem.quantity <= updatedItem.lowStockThreshold,
-          isOutOfStock: updatedItem.quantity !== null && updatedItem.quantity === 0,
-        });
+      if (updatedItem && updatedItem.quantity === 0) {
+        await db
+          .update(menuItems)
+          .set({ available: false })
+          .where(eq(menuItems.id, updatedItem.id));
       }
     }
 
@@ -101,12 +103,9 @@ export async function PATCH(
       with: { location: true },
     });
 
-    // Publish SSE event
-    sseEventBus.publish(party.id, 'request-update', updatedRequest);
-
     return NextResponse.json(updatedRequest);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update request';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to update request:', error);
+    return NextResponse.json({ error: 'Failed to update request.' }, { status: 500 });
   }
 }

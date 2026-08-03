@@ -62,6 +62,9 @@ export const requests = sqliteTable(
     locationId: text('location_id').references(() => locations.id, {
       onDelete: 'set null',
     }),
+    menuItemId: text('menu_item_id').references(() => menuItems.id, {
+      onDelete: 'set null',
+    }),
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),
@@ -70,6 +73,18 @@ export const requests = sqliteTable(
     index('requests_party_id_idx').on(table.partyId),
     index('requests_location_id_idx').on(table.locationId),
   ]
+);
+
+export const rateLimits = sqliteTable(
+  'rate_limits',
+  {
+    id: text('id').primaryKey(),
+    key: text('key').notNull(),
+    window: text('window').notNull(),
+    count: integer('count').notNull().default(1),
+    expiresAt: text('expires_at').notNull(),
+  },
+  (table) => [index('rate_limits_key_window_idx').on(table.key, table.window)]
 );
 
 // --- Relations ---
@@ -104,6 +119,10 @@ export const requestsRelations = relations(requests, ({ one }) => ({
     fields: [requests.locationId],
     references: [locations.id],
   }),
+  menuItem: one(menuItems, {
+    fields: [requests.menuItemId],
+    references: [menuItems.id],
+  }),
 }));
 
 // --- Type Exports ---
@@ -116,3 +135,5 @@ export type Location = typeof locations.$inferSelect;
 export type NewLocation = typeof locations.$inferInsert;
 export type RequestRecord = typeof requests.$inferSelect;
 export type NewRequest = typeof requests.$inferInsert;
+export type RateLimit = typeof rateLimits.$inferSelect;
+export type NewRateLimit = typeof rateLimits.$inferInsert;

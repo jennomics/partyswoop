@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { parties } from '@/lib/schema';
 import { scanFridgePhotos } from '@/lib/ai';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { eq } from 'drizzle-orm';
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(
   request: Request,
@@ -23,6 +26,15 @@ export async function POST(
 
     if (new Date() > new Date(party.expiresAt)) {
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
+    }
+
+    // Rate limit: 3 scans per party (lifetime, using a long window)
+    const rateLimitResult = await checkRateLimit(db, `fridge-scan:${party.id}`, 86_400_000, 3);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Scan limit reached for this party. Please add drinks manually.' },
+        { status: 429 }
+      );
     }
 
     // Check for API key early
@@ -50,13 +62,19 @@ export async function POST(
       );
     }
 
-    // Convert files to buffers with per-file size validation
+    // Convert files to buffers with per-file size and MIME type validation
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
     const imageBuffers: Buffer[] = [];
     for (const file of files) {
       if (!(file instanceof File)) {
         return NextResponse.json(
           { error: 'Invalid file format.' },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        return NextResponse.json(
+          { error: 'Invalid image type. Only JPEG, PNG, and WebP are accepted.' },
           { status: 400 }
         );
       }
@@ -83,7 +101,7 @@ export async function POST(
     // Never auto-publish - just return the detected drinks
     return NextResponse.json({ drinks: result.drinks });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Scan failed';
+    console.error('Fridge scan failed:', error);
     return NextResponse.json(
       { error: 'Could not identify drinks from the photos. Please add drinks manually.', fallback: true },
       { status: 200 }

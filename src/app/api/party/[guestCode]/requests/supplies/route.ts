@@ -57,7 +57,7 @@ export async function GET(
 
     return NextResponse.json({ supplies: result, partyName: party.name });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch supply queue';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch supply queue:', error);
+    return NextResponse.json({ error: 'Failed to fetch supply queue.' }, { status: 500 });
   }
 }

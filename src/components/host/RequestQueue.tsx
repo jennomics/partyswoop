@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -41,8 +40,6 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RequestItem['category'] | null>(null);
 
-  const sseEvent = useSSE(`/api/parties/${hostCode}/events`, ['new-request', 'request-update']);
-
   const fetchRequests = useCallback(async () => {
     try {
       const res = await fetch(`/api/parties/${hostCode}/requests`);
@@ -63,33 +60,22 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
     fetchRequests();
   }, [fetchRequests]);
 
-  // Polling fallback: refetch when tab becomes visible (handles missed SSE events)
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
+    const interval = setInterval(fetchRequests, 3000);
+
     function handleVisibilityChange() {
       if (document.visibilityState === 'visible') {
         fetchRequests();
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchRequests]);
-
-  // Handle SSE events
-  useEffect(() => {
-    if (!sseEvent) return;
-
-    if (sseEvent.type === 'new-request') {
-      const newReq = sseEvent.data as RequestItem;
-      setRequests((prev) => [newReq, ...prev.filter((r) => r.id !== newReq.id)]);
-    } else if (sseEvent.type === 'request-update') {
-      const updated = sseEvent.data as RequestItem;
-      setRequests((prev) =>
-        prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
-      );
-    }
-  }, [sseEvent]);
 
   async function updateStatus(requestId: string, status: 'SEEN' | 'DONE') {
     setUpdateError('');

@@ -50,7 +50,7 @@ export async function GET(
 
     return NextResponse.json({ items: itemsWithStock, grouped });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch inventory';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch inventory:', error);
+    return NextResponse.json({ error: 'Failed to fetch inventory.' }, { status: 500 });
   }
 }

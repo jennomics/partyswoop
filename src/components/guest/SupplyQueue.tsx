@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -28,12 +27,10 @@ function getDestination(supply: SupplyQueueItem): string {
   return supply.deliveryValue;
 }
 
-export default function SupplyQueue({ guestCode, myRequestIds, partyName }: SupplyQueueProps) {
+export default function SupplyQueue({ guestCode, myRequestIds, partyName: _partyName }: SupplyQueueProps) {
   const [supplies, setSupplies] = useState<SupplyQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const sseEvent = useSSE(`/api/party/${guestCode}/events`, ['request-update', 'new-request']);
 
   const fetchSupplies = useCallback(async () => {
     try {
@@ -55,45 +52,22 @@ export default function SupplyQueue({ guestCode, myRequestIds, partyName }: Supp
     fetchSupplies();
   }, [fetchSupplies]);
 
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
-    if (!sseEvent) return;
-    const data = sseEvent.data as Record<string, unknown> | null | undefined;
-    if (!data || typeof data !== 'object') return;
+    const interval = setInterval(fetchSupplies, 3000);
 
-    if (sseEvent.type === 'request-update') {
-      const updatedId = data.id as string | undefined;
-      const updatedStatus = data.status as string | undefined;
-      if (!updatedId || !updatedStatus) return;
-      setSupplies((prev) =>
-        prev.map((supply) =>
-          supply.id === updatedId ? { ...supply, status: updatedStatus } : supply
-        )
-      );
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchSupplies();
+      }
     }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    if (sseEvent.type === 'new-request') {
-      const category = data.category as string | undefined;
-      if (category !== 'SUPPLY') return;
-      const id = data.id as string | undefined;
-      const item = data.item as string | undefined;
-      const deliveryType = data.deliveryType as string | undefined;
-      const deliveryValue = data.deliveryValue as string | undefined;
-      const status = data.status as string | undefined;
-      const createdAt = data.createdAt as string | undefined;
-      if (!id || !item || !deliveryType || !deliveryValue || !status || !createdAt) return;
-      const location = data.location as { id: string; name: string | null } | null | undefined;
-      const newSupply: SupplyQueueItem = {
-        id,
-        item,
-        deliveryType,
-        deliveryValue,
-        status,
-        createdAt,
-        location: location ?? null,
-      };
-      setSupplies((prev) => [...prev, newSupply]);
-    }
-  }, [sseEvent]);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchSupplies]);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { parties, menuItems, locations, requests } from '@/lib/schema';
+import { parties, menuItems, requests } from '@/lib/schema';
 import { eq, asc, desc } from 'drizzle-orm';
 
 /**
@@ -45,7 +45,7 @@ export async function GET(
 
     return NextResponse.json(party);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch party';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch party:', error);
+    return NextResponse.json({ error: 'Failed to fetch party.' }, { status: 500 });
   }
 }

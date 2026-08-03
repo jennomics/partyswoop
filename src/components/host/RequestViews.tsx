@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -65,8 +64,6 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  const sseEvent = useSSE(`/api/parties/${hostCode}/events`, ['new-request', 'request-update']);
-
   const fetchRequests = useCallback(async () => {
     try {
       const res = await fetch(`/api/parties/${hostCode}/requests`);
@@ -87,20 +84,22 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
     fetchRequests();
   }, [fetchRequests]);
 
-  // Handle SSE events for real-time updates
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
-    if (!sseEvent) return;
+    const interval = setInterval(fetchRequests, 3000);
 
-    if (sseEvent.type === 'new-request') {
-      const newReq = sseEvent.data as RequestItem;
-      setRequests((prev) => [newReq, ...prev.filter((r) => r.id !== newReq.id)]);
-    } else if (sseEvent.type === 'request-update') {
-      const updated = sseEvent.data as RequestItem;
-      setRequests((prev) =>
-        prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r))
-      );
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchRequests();
+      }
     }
-  }, [sseEvent]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchRequests]);
 
   function toggleGroup(key: string) {
     setExpandedGroups((prev) => {

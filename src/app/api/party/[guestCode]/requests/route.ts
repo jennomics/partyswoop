@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { parties, menuItems, locations, requests } from '@/lib/schema';
 import { generateId } from '@/lib/id';
-import { sseEventBus } from '@/lib/sse';
-import { guestRequestLimiter } from '@/lib/rateLimit';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { validateRequestCategory, validateDeliveryTarget } from '@/lib/validation';
 import { eq, and } from 'drizzle-orm';
 
@@ -13,22 +12,6 @@ export async function POST(
 ) {
   try {
     const { guestCode } = await params;
-
-    // Rate limit by guestCode (bounds abuse per-party link, not spoofable like X-Forwarded-For)
-    const rateLimitResult = guestRequestLimiter.check(guestCode);
-
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: 'Too many requests. Please wait before submitting again.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(Math.ceil(rateLimitResult.retryAfterMs / 1000)),
-          },
-        }
-      );
-    }
-
     const db = getDb();
 
     const party = await db.query.parties.findFirst({
@@ -44,6 +27,21 @@ export async function POST(
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
+    // Rate limit: 20 requests per minute per party (D1-backed)
+    const rateLimitResult = await checkRateLimit(db, `guest-request:${party.id}`, 60_000, 20);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before submitting again.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(rateLimitResult.retryAfterMs / 1000)),
+          },
+        }
+      );
+    }
+
     // Fetch available menu items and locations
     const availableMenuItems = await db
       .select()
@@ -55,7 +53,7 @@ export async function POST(
       .from(locations)
       .where(eq(locations.partyId, party.id));
 
-    const body = await request.json() as Record<string, any>;
+    const body = await request.json() as Record<string, unknown>;
 
     // Validate category
     const categoryValidation = validateRequestCategory(body.category);
@@ -64,10 +62,15 @@ export async function POST(
     }
 
     const category = body.category as 'DRINK' | 'SUPPLY' | 'SONG' | 'OTHER';
+    const bodyItem = typeof body.item === 'string' ? body.item.trim() : '';
+    const bodyDeliveryType = typeof body.deliveryType === 'string' ? body.deliveryType : '';
+    const bodyDeliveryValue = typeof body.deliveryValue === 'string' ? body.deliveryValue.trim() : '';
+    const bodyNote = typeof body.note === 'string' ? body.note.trim() : null;
 
     // Validate item for DRINK and SUPPLY categories
+    let menuItemId: string | null = null;
     if (category === 'DRINK' || category === 'SUPPLY') {
-      if (!body.item || body.item.trim() === '') {
+      if (!bodyItem) {
         return NextResponse.json(
           { error: `Item name is required for ${category} requests.` },
           { status: 400 }
@@ -77,28 +80,39 @@ export async function POST(
       // For DRINK requests, item must be on the available menu
       if (category === 'DRINK') {
         const availableDrink = availableMenuItems.find(
-          (item) => item.category === 'DRINK' && item.name === body.item.trim()
+          (item) => item.category === 'DRINK' && item.name === bodyItem
         );
         if (!availableDrink) {
           return NextResponse.json(
-            { error: `"${body.item}" is not available on the drink menu.` },
+            { error: `"${bodyItem}" is not available on the drink menu.` },
             { status: 400 }
           );
+        }
+        menuItemId = availableDrink.id;
+      }
+
+      // For SUPPLY requests, try to find the matching menu item
+      if (category === 'SUPPLY') {
+        const matchingSupply = availableMenuItems.find(
+          (item) => item.category === 'SUPPLY' && item.name === bodyItem
+        );
+        if (matchingSupply) {
+          menuItemId = matchingSupply.id;
         }
       }
     }
 
     // Validate delivery for DRINK requests
-    let deliveryType = body.deliveryType || 'NAME';
-    let deliveryValue = body.deliveryValue || '';
+    let deliveryType: string = bodyDeliveryType || 'NAME';
+    let deliveryValue: string = bodyDeliveryValue || '';
 
     if (category === 'DRINK') {
       const deliveryValidation = validateDeliveryTarget(body.deliveryType, body.deliveryValue);
       if (!deliveryValidation.valid) {
         return NextResponse.json({ error: deliveryValidation.error }, { status: 400 });
       }
-      deliveryType = body.deliveryType;
-      deliveryValue = body.deliveryValue.trim();
+      deliveryType = bodyDeliveryType;
+      deliveryValue = bodyDeliveryValue;
 
       // LOCATION delivery only allowed if a valid location exists
       if (deliveryType === 'LOCATION') {
@@ -114,8 +128,8 @@ export async function POST(
 
     // For non-DRINK categories, set default delivery if not specified
     if (category !== 'DRINK') {
-      deliveryType = body.deliveryType || 'NAME';
-      deliveryValue = body.deliveryValue?.trim() || body.item?.trim() || category;
+      deliveryType = bodyDeliveryType || 'NAME';
+      deliveryValue = bodyDeliveryValue || bodyItem || category;
     }
 
     // Find locationId if delivery type is LOCATION
@@ -135,12 +149,13 @@ export async function POST(
         id: generateId(),
         partyId: party.id,
         category,
-        item: body.item?.trim() || category,
-        note: body.note?.trim() || null,
+        item: bodyItem || category,
+        note: bodyNote || null,
         deliveryType,
         deliveryValue,
         status: 'NEW',
         locationId,
+        menuItemId,
       })
       .returning();
 
@@ -150,12 +165,9 @@ export async function POST(
       with: { location: true },
     });
 
-    // Publish SSE event to host
-    sseEventBus.publish(party.id, 'new-request', requestWithLocation);
-
     return NextResponse.json(requestWithLocation, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to submit request';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to submit request:', error);
+    return NextResponse.json({ error: 'Failed to submit request.' }, { status: 500 });
   }
 }

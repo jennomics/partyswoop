@@ -1,83 +1,68 @@
+import { rateLimits } from './schema';
+import { eq, and, gt, sql } from 'drizzle-orm';
+import { generateId } from './id';
+import type { Database } from './db';
+
 /**
- * Simple in-memory sliding window rate limiter.
+ * D1-backed sliding window rate limiter.
  *
- * Like the SSE event bus, this is process-local and resets on restart.
- * For multi-instance deployments, replace with Redis-based rate limiting.
+ * Stores rate limit records in the rate_limits table. Each call checks
+ * how many unexpired records exist for the given key within the time window.
+ * If under the limit, inserts a new record and returns allowed: true.
+ * Otherwise returns allowed: false with a retryAfterMs value.
  *
- * TODO: On Cloudflare Workers, the in-memory Map resets per-isolate, making this
- * effectively a no-op. Replace with Cloudflare's built-in Rate Limiting product,
- * or a KV/D1-backed counter for production Workers deployment.
+ * Periodically cleans up expired records on each call to prevent table growth.
  */
+export async function checkRateLimit(
+  db: Database,
+  key: string,
+  windowMs: number,
+  maxRequests: number
+): Promise<{ allowed: true } | { allowed: false; retryAfterMs: number }> {
+  const now = Date.now();
+  const expiresAt = new Date(now + windowMs).toISOString();
+  const window = String(Math.floor(now / windowMs));
 
-interface RateLimitEntry {
-  timestamps: number[];
-}
-
-class RateLimiter {
-  private entries: Map<string, RateLimitEntry> = new Map();
-  private readonly windowMs: number;
-  private readonly maxRequests: number;
-
-  constructor(windowMs: number, maxRequests: number) {
-    this.windowMs = windowMs;
-    this.maxRequests = maxRequests;
+  // Clean up expired records (fire-and-forget style, one in ~10 calls)
+  if (Math.random() < 0.1) {
+    await db
+      .delete(rateLimits)
+      .where(gt(sql`datetime('now')`, rateLimits.expiresAt))
+      .catch(() => {
+        // Non-critical cleanup, ignore errors
+      });
   }
 
-  /**
-   * Check if a request is allowed for the given key.
-   * Returns { allowed: true } or { allowed: false, retryAfterMs }.
-   */
-  check(key: string): { allowed: true } | { allowed: false; retryAfterMs: number } {
-    const now = Date.now();
-    const windowStart = now - this.windowMs;
+  // Count unexpired records for this key
+  const existing = await db
+    .select({ count: sql<number>`count(*)`, oldest: sql<string>`min(${rateLimits.expiresAt})` })
+    .from(rateLimits)
+    .where(
+      and(
+        eq(rateLimits.key, key),
+        gt(rateLimits.expiresAt, new Date(now).toISOString())
+      )
+    );
 
-    let entry = this.entries.get(key);
-    if (!entry) {
-      entry = { timestamps: [] };
-      this.entries.set(key, entry);
-    }
+  const count = existing[0]?.count ?? 0;
 
-    // Remove timestamps outside the window
-    entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
-
-    if (entry.timestamps.length >= this.maxRequests) {
-      const oldestInWindow = entry.timestamps[0];
-      const retryAfterMs = oldestInWindow + this.windowMs - now;
-      return { allowed: false, retryAfterMs };
-    }
-
-    entry.timestamps.push(now);
-    return { allowed: true };
+  if (count >= maxRequests) {
+    // Calculate retry-after from the oldest record's expiry
+    const oldest = existing[0]?.oldest;
+    const retryAfterMs = oldest
+      ? Math.max(0, new Date(oldest).getTime() - now)
+      : windowMs;
+    return { allowed: false, retryAfterMs };
   }
 
-  /** Periodic cleanup of stale entries to prevent memory growth */
-  cleanup(): void {
-    const now = Date.now();
-    const windowStart = now - this.windowMs;
-    const keysToDelete: string[] = [];
-    this.entries.forEach((entry, key) => {
-      entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
-      if (entry.timestamps.length === 0) {
-        keysToDelete.push(key);
-      }
-    });
-    for (const key of keysToDelete) {
-      this.entries.delete(key);
-    }
-  }
+  // Insert a new rate limit record
+  await db.insert(rateLimits).values({
+    id: generateId(),
+    key,
+    window,
+    count: 1,
+    expiresAt,
+  });
+
+  return { allowed: true };
 }
-
-// Guest request rate limiter: 10 requests per 60 seconds per IP
-const globalForRateLimit = globalThis as unknown as {
-  guestRequestLimiter: RateLimiter | undefined;
-};
-
-export const guestRequestLimiter =
-  globalForRateLimit.guestRequestLimiter ?? new RateLimiter(60_000, 10);
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForRateLimit.guestRequestLimiter = guestRequestLimiter;
-}
-
-// Cleanup stale entries every 5 minutes
-setInterval(() => guestRequestLimiter.cleanup(), 5 * 60_000).unref?.();

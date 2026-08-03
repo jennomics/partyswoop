@@ -43,7 +43,7 @@ export async function GET(
 
     return NextResponse.json(songRequests);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch song queue';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch song queue:', error);
+    return NextResponse.json({ error: 'Failed to fetch song queue.' }, { status: 500 });
   }
 }

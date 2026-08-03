@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -23,8 +22,6 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const sseEvent = useSSE(`/api/party/${guestCode}/events`, ['request-update', 'new-request']);
-
   const fetchSongs = useCallback(async () => {
     try {
       const res = await fetch(`/api/party/${guestCode}/requests/songs`);
@@ -45,35 +42,22 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
     fetchSongs();
   }, [fetchSongs]);
 
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
-    if (!sseEvent) return;
-    const data = sseEvent.data as Record<string, unknown> | null | undefined;
-    if (!data || typeof data !== 'object') return;
+    const interval = setInterval(fetchSongs, 3000);
 
-    if (sseEvent.type === 'request-update') {
-      const updatedId = data.id as string | undefined;
-      const updatedStatus = data.status as string | undefined;
-      if (!updatedId || !updatedStatus) return;
-      setSongs((prev) =>
-        prev.map((song) =>
-          song.id === updatedId ? { ...song, status: updatedStatus } : song
-        )
-      );
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchSongs();
+      }
     }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    if (sseEvent.type === 'new-request') {
-      const category = data.category as string | undefined;
-      if (category !== 'SONG') return;
-      const id = data.id as string | undefined;
-      const item = data.item as string | undefined;
-      const deliveryValue = data.deliveryValue as string | undefined;
-      const status = data.status as string | undefined;
-      const createdAt = data.createdAt as string | undefined;
-      if (!id || !item || !deliveryValue || !status || !createdAt) return;
-      const newSong: SongQueueItem = { id, item, deliveryValue, status, createdAt };
-      setSongs((prev) => [...prev, newSong]);
-    }
-  }, [sseEvent]);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchSongs]);
 
   if (loading) {
     return (

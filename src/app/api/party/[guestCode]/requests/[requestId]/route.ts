@@ -35,7 +35,7 @@ export async function GET(
 
     return NextResponse.json(requestRecord);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch request';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch request:', error);
+    return NextResponse.json({ error: 'Failed to fetch request.' }, { status: 500 });
   }
 }

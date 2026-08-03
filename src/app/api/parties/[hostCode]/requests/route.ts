@@ -32,7 +32,7 @@ export async function GET(
 
     return NextResponse.json(partyRequests);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch requests';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch requests:', error);
+    return NextResponse.json({ error: 'Failed to fetch requests.' }, { status: 500 });
   }
 }

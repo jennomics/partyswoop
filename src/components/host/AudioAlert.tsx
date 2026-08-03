@@ -1,24 +1,58 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useSSE } from '@/hooks/useSSE';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAudioAlert } from '@/hooks/useAudioAlert';
 
 interface AudioAlertProps {
   hostCode: string;
 }
 
+interface RequestItem {
+  id: string;
+  status: string;
+}
+
 export default function AudioAlert({ hostCode }: AudioAlertProps) {
   const { isEnabled, enable, playAlert } = useAudioAlert();
-  const sseEvent = useSSE(`/api/parties/${hostCode}/events`, ['new-request']);
-  const prevEventRef = useRef(sseEvent);
+  const [requestCount, setRequestCount] = useState<number | null>(null);
+  const prevCountRef = useRef<number | null>(null);
+
+  const fetchRequests = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/parties/${hostCode}/requests`);
+      if (!res.ok) return;
+      const data: RequestItem[] = await res.json();
+      const newCount = data.filter((r) => r.status === 'NEW').length;
+      setRequestCount(newCount);
+    } catch {
+      // Silent fail for polling
+    }
+  }, [hostCode]);
 
   useEffect(() => {
-    if (sseEvent && sseEvent !== prevEventRef.current && isEnabled) {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 3000);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchRequests();
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (requestCount === null) return;
+    if (prevCountRef.current !== null && requestCount > prevCountRef.current && isEnabled) {
       playAlert();
     }
-    prevEventRef.current = sseEvent;
-  }, [sseEvent, isEnabled, playAlert]);
+    prevCountRef.current = requestCount;
+  }, [requestCount, isEnabled, playAlert]);
 
   if (isEnabled) {
     return (

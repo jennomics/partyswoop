@@ -33,8 +33,8 @@ export async function GET(
 
     return NextResponse.json(items);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch menu items';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch menu items:', error);
+    return NextResponse.json({ error: 'Failed to fetch menu items.' }, { status: 500 });
   }
 }
 
@@ -59,8 +59,8 @@ export async function POST(
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, any>;
-    const name = body.name?.trim();
+    const body = await request.json() as Record<string, unknown>;
+    const name = (body.name as string | undefined)?.trim();
 
     if (!name) {
       return NextResponse.json(
@@ -70,9 +70,18 @@ export async function POST(
     }
 
     const category = body.category === 'SUPPLY' ? 'SUPPLY' : 'DRINK';
-    const quantity = body.quantity !== undefined && body.quantity !== null
-      ? Math.max(0, Math.floor(Number(body.quantity)))
+    const rawQuantity = body.quantity !== undefined && body.quantity !== null
+      ? Number(body.quantity)
       : null;
+
+    if (rawQuantity !== null && isNaN(rawQuantity)) {
+      return NextResponse.json(
+        { error: 'Quantity must be a valid number.' },
+        { status: 400 }
+      );
+    }
+
+    const quantity = rawQuantity !== null ? Math.max(0, Math.floor(rawQuantity)) : null;
 
     const [menuItem] = await db
       .insert(menuItems)
@@ -88,7 +97,7 @@ export async function POST(
 
     return NextResponse.json(menuItem, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to add menu item';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to add menu item:', error);
+    return NextResponse.json({ error: 'Failed to add menu item.' }, { status: 500 });
   }
 }

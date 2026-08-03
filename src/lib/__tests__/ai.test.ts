@@ -1,14 +1,15 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { scanFridgePhotos } from '../ai';
 
 // Mock global fetch
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('scanFridgePhotos', () => {
   const testImage = Buffer.from('fake-image-data');
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('returns friendly error when OPENAI_API_KEY is not set', async () => {

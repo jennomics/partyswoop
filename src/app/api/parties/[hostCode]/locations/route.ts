@@ -33,8 +33,8 @@ export async function GET(
 
     return NextResponse.json(partyLocations);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch locations';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to fetch locations:', error);
+    return NextResponse.json({ error: 'Failed to fetch locations.' }, { status: 500 });
   }
 }
 
@@ -59,8 +59,8 @@ export async function POST(
       return NextResponse.json({ error: 'This party has expired.' }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, any>;
-    const name = body.name?.trim();
+    const body = await request.json() as Record<string, unknown>;
+    const name = (body.name as string | undefined)?.trim();
 
     if (!name) {
       return NextResponse.json(
@@ -101,12 +101,12 @@ export async function POST(
     return NextResponse.json(
       {
         ...location,
-        guestLink: `/party/${party.guestCode}?location=${location!.code}`,
+        guestLink: `/party/${party.guestCode}?loc=${location!.code}`,
       },
       { status: 201 }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to create location';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to create location:', error);
+    return NextResponse.json({ error: 'Failed to create location.' }, { status: 500 });
   }
 }

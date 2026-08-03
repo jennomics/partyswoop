@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { parties, menuItems } from '@/lib/schema';
-import { sseEventBus } from '@/lib/sse';
 import { eq, and } from 'drizzle-orm';
 
 export async function PATCH(
@@ -33,11 +32,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Menu item not found.' }, { status: 404 });
     }
 
-    const body = await request.json() as Record<string, any>;
+    const body = await request.json() as Record<string, unknown>;
     const updateData: { name?: string; available?: boolean; quantity?: number | null; lowStockThreshold?: number } = {};
 
     if (body.name !== undefined) {
-      const name = body.name?.trim();
+      const name = (body.name as string | undefined)?.trim();
       if (!name) {
         return NextResponse.json({ error: 'Name cannot be empty.' }, { status: 400 });
       }
@@ -49,13 +48,23 @@ export async function PATCH(
     }
 
     if (body.quantity !== undefined) {
-      updateData.quantity = body.quantity === null
-        ? null
-        : Math.max(0, Math.floor(Number(body.quantity)));
+      if (body.quantity === null) {
+        updateData.quantity = null;
+      } else {
+        const rawQty = Number(body.quantity);
+        if (isNaN(rawQty)) {
+          return NextResponse.json({ error: 'Quantity must be a valid number.' }, { status: 400 });
+        }
+        updateData.quantity = Math.max(0, Math.floor(rawQty));
+      }
     }
 
     if (body.lowStockThreshold !== undefined) {
-      updateData.lowStockThreshold = Math.max(0, Math.floor(Number(body.lowStockThreshold)));
+      const rawThreshold = Number(body.lowStockThreshold);
+      if (isNaN(rawThreshold)) {
+        return NextResponse.json({ error: 'Threshold must be a valid number.' }, { status: 400 });
+      }
+      updateData.lowStockThreshold = Math.max(0, Math.floor(rawThreshold));
     }
 
     const [updatedItem] = await db
@@ -64,13 +73,10 @@ export async function PATCH(
       .where(eq(menuItems.id, itemId))
       .returning();
 
-    // Publish SSE event to notify connected guests
-    sseEventBus.publish(party.id, 'menu-update', updatedItem);
-
     return NextResponse.json(updatedItem);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update menu item';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to update menu item:', error);
+    return NextResponse.json({ error: 'Failed to update menu item.' }, { status: 500 });
   }
 }
 
@@ -105,12 +111,9 @@ export async function DELETE(
 
     await db.delete(menuItems).where(eq(menuItems.id, itemId));
 
-    // Publish SSE event to notify connected guests
-    sseEventBus.publish(party.id, 'menu-update', { deleted: itemId });
-
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to delete menu item';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Failed to delete menu item:', error);
+    return NextResponse.json({ error: 'Failed to delete menu item.' }, { status: 500 });
   }
 }

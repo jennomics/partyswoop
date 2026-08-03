@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -28,11 +27,6 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
   const [editQuantity, setEditQuantity] = useState('');
   const [editThreshold, setEditThreshold] = useState('');
 
-  const sseEvent = useSSE(`/api/parties/${hostCode}/events`, [
-    'inventory-update',
-    'menu-update',
-  ]);
-
   const fetchInventory = useCallback(async () => {
     try {
       const res = await fetch(`/api/parties/${hostCode}/inventory`);
@@ -53,12 +47,22 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
     fetchInventory();
   }, [fetchInventory]);
 
-  // React to SSE events for live updates
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
-    if (sseEvent) {
-      fetchInventory();
+    const interval = setInterval(fetchInventory, 3000);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchInventory();
+      }
     }
-  }, [sseEvent, fetchInventory]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchInventory]);
 
   async function saveQuantity(itemId: string) {
     setError('');

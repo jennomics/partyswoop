@@ -43,4 +43,7 @@ next-env.d.ts
 /.open-next/
 
 # groundcrew runtime logs (auto-generated, can be large)
-.kiro/agent-log.md
+.kiro/
+
+# development task artifacts
+.agents/

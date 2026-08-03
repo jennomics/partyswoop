@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSSE } from '@/hooks/useSSE';
 
 interface RequestTrackerProps {
   guestCode: string;
@@ -22,18 +21,7 @@ const STEP_LABELS: Record<Status, string> = {
 
 export default function RequestTracker({ guestCode, requestId, item, note }: RequestTrackerProps) {
   const [status, setStatus] = useState<Status>('NEW');
-  const sseEvent = useSSE(`/api/party/${guestCode}/events`, ['request-update']);
 
-  // Handle SSE updates
-  useEffect(() => {
-    if (!sseEvent) return;
-    const data = sseEvent.data as { id?: string; status?: Status };
-    if (data.id === requestId && data.status) {
-      setStatus(data.status);
-    }
-  }, [sseEvent, requestId]);
-
-  // Poll on visibility change (for returning guests)
   const pollStatus = useCallback(async () => {
     try {
       const res = await fetch(`/api/party/${guestCode}/requests/${requestId}`);
@@ -46,14 +34,22 @@ export default function RequestTracker({ guestCode, requestId, item, note }: Req
     }
   }, [guestCode, requestId]);
 
+  // Poll every 3 seconds for near-real-time updates
   useEffect(() => {
+    pollStatus();
+    const interval = setInterval(pollStatus, 3000);
+
     function handleVisibilityChange() {
       if (document.visibilityState === 'visible') {
         pollStatus();
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [pollStatus]);
 
   const currentStepIndex = STEPS.indexOf(status);

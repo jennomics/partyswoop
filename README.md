@@ -1,17 +1,18 @@
 # PartySwoop
 
-Real-time party request management. Guests scan a QR code, request drinks, supplies, or songs, and track their request status live. Hosts manage the menu, view requests by category, track inventory, and mark requests done. No accounts, no logins, no installs.
+Party request management with near-real-time updates via polling. Guests scan a QR code, request drinks, supplies, or songs, and track their request status. Hosts manage the menu, view requests by category, track inventory, and mark requests done. No accounts, no logins, no installs.
 
 ## Features
 
 - **QR code entry** - Guests scan a code to join the party instantly
-- **Real-time updates** - Server-Sent Events push status changes to all connected clients
+- **Near-real-time updates** - 3-second polling keeps all clients in sync
 - **Request categories** - Drinks, supplies, and songs each have dedicated flows
 - **Inventory tracking** - Hosts set quantities and low-stock thresholds per item
 - **AI fridge scan** - Photograph your fridge and let OpenAI Vision generate the drink menu
 - **Location tagging** - Create named zones (patio, kitchen) with unique QR codes for delivery routing
 - **Auto-expiry** - Parties expire after 24 hours with no cleanup required
 - **Audio alerts** - Hosts receive a sound notification when new requests arrive
+- **Rate limiting** - D1-backed rate limits prevent abuse (party creation, scans, requests)
 
 ## Tech stack
 
@@ -23,7 +24,6 @@ Real-time party request management. Guests scan a QR code, request drinks, suppl
 | ORM | Drizzle ORM |
 | Styling | Tailwind CSS |
 | Runtime | Cloudflare Workers via @opennextjs/cloudflare |
-| Real-time | Server-Sent Events (SSE) |
 | AI | OpenAI Vision API |
 | QR codes | qrcode (Node) |
 
@@ -58,7 +58,7 @@ npm install
 # Copy environment variables
 cp .env.example .env
 
-# Start the development server
+# Start the development server (uses D1 bindings via OpenNext)
 npm run dev
 ```
 
@@ -69,14 +69,30 @@ The app runs at `http://localhost:3000`.
 Migrations live in `migrations/` and are applied with Wrangler:
 
 ```bash
+# Apply migrations locally
+npm run db:migrate:local
+
+# Apply migrations to remote D1
+npm run db:migrate:remote
+
 # Generate a new migration from schema changes
 npm run db:generate
-
-# Apply migrations to D1
-npm run db:migrate
 ```
 
-For local development, Next.js uses D1 bindings through the Cloudflare Workers runtime.
+### Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production (Next.js) |
+| `npm run build:cf` | Build for Cloudflare Workers |
+| `npm run preview` | Build and preview Cloudflare Workers locally |
+| `npm run deploy` | Deploy to Cloudflare Workers |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run tests with Vitest |
+| `npm run db:migrate:local` | Apply D1 migrations locally |
+| `npm run db:migrate:remote` | Apply D1 migrations to production |
+| `npm run db:generate` | Generate migration from schema |
 
 ## Deployment
 
@@ -90,7 +106,7 @@ npm run build:cf
 npm run deploy
 ```
 
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push to `main`, building and deploying automatically.
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push to `main`: lint, test, apply D1 migrations, build, and deploy.
 
 ### Required secrets and variables
 
@@ -98,14 +114,16 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on every push to
 |------|------|-------------|
 | `CLOUDFLARE_API_TOKEN` | Secret | Cloudflare API token with Workers and D1 permissions |
 | `CLOUDFLARE_ACCOUNT_ID` | Variable | Your Cloudflare account ID |
+| `DEPLOY_URL` | Variable | (Optional) Production URL for health check |
 
 ## Environment variables
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Database connection (used by Drizzle Kit for migrations) |
-| `OPENAI_API_KEY` | OpenAI API key for the fridge scan feature |
+| `OPENAI_API_KEY` | OpenAI API key for the fridge scan feature (optional) |
 | `NEXT_PUBLIC_BASE_URL` | Public base URL for QR code generation |
+
+D1 database configuration lives in `wrangler.toml`, not in environment variables.
 
 ## Project structure
 
@@ -121,8 +139,8 @@ src/
     host/         # Host-specific components (menu, queue, QR, fridge scan)
     guest/        # Guest-specific components (request forms, trackers)
     ui/           # Shared UI primitives
-  hooks/          # Custom hooks (SSE, audio alerts)
-  lib/            # Core utilities (schema, DB, validation, SSE, AI)
+  hooks/          # Custom hooks (polling, audio alerts)
+  lib/            # Core utilities (schema, DB, validation, rate limiting, AI)
 migrations/       # D1 SQL migration files
 ```
 

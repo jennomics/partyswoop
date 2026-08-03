@@ -1,7 +1,0 @@
-{
-  "task_id": "task-inventory-queues-views",
-  "task_description": "Build 4 features: (1) Inventory tracking page for host with quantities, auto-decrement on fulfillment, low-stock alerts. (2) Host request views filtered/grouped by guest, location, item. (3) Song request queue for guests showing queue position and what has played. (4) Supply request queue for guests showing delivery destination, deliverer, and status.",
-  "status": "in_progress",
-  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
-  "blocked_reason": null
-}
