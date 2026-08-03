@@ -55,7 +55,7 @@ function groupRequests(requests: RequestItem[], groupBy: GroupBy): Record<string
   return groups;
 }
 
-export default function RequestViews({ hostCode, requests: requestsProp }: { hostCode: string; requests: RequestItem[] | null }) {
+export default function RequestViews({ requests: requestsProp }: { requests: RequestItem[] | null }) {
   const [groupBy, setGroupBy] = useState<GroupBy>('guest');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
