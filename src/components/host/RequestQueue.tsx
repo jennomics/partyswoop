@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -14,6 +14,12 @@ interface RequestItem {
   status: 'NEW' | 'SEEN' | 'DONE';
   createdAt: string;
   location?: { name: string } | null;
+}
+
+interface RequestQueueProps {
+  hostCode: string;
+  requests: RequestItem[] | null;
+  onRefetch: () => Promise<void>;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -32,50 +38,18 @@ function timeAgo(dateStr: string): string {
   return `${hours}h ago`;
 }
 
-export default function RequestQueue({ hostCode }: { hostCode: string }) {
+export default function RequestQueue({ hostCode, requests: externalRequests, onRefetch }: RequestQueueProps) {
   const [requests, setRequests] = useState<RequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [updateError, setUpdateError] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<RequestItem['category'] | null>(null);
 
-  const fetchRequests = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/parties/${hostCode}/requests`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to load requests');
-      }
-      const data = await res.json();
-      setRequests(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load requests');
-    } finally {
-      setLoading(false);
-    }
-  }, [hostCode]);
-
+  // Sync from parent polling data
   useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
-
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    const interval = setInterval(fetchRequests, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchRequests();
-      }
+    if (externalRequests) {
+      setRequests(externalRequests);
     }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchRequests]);
+  }, [externalRequests]);
 
   async function updateStatus(requestId: string, status: 'SEEN' | 'DONE') {
     setUpdateError('');
@@ -97,17 +71,13 @@ export default function RequestQueue({ hostCode }: { hostCode: string }) {
       }
     } catch (err) {
       // Revert optimistic update
-      fetchRequests();
+      onRefetch();
       setUpdateError(err instanceof Error ? err.message : 'Failed to update');
     }
   }
 
-  if (loading) {
+  if (!externalRequests) {
     return <LoadingSpinner size="md" />;
-  }
-
-  if (error) {
-    return <ErrorMessage message={error} />;
   }
 
   const activeRequests = requests.filter((r) => r.status !== 'DONE');

@@ -45,5 +45,20 @@ jobs:
       - name: Health check
         if: vars.DEPLOY_URL != ''
         run: |
-          sleep 10
-          curl -f "${{ vars.DEPLOY_URL }}/api/health" || echo "Health check failed - deployment may still be propagating"
+          attempts=0
+          max_attempts=3
+          sleep_seconds=10
+          until [ $attempts -ge $max_attempts ]; do
+            attempts=$((attempts + 1))
+            echo "Health check attempt $attempts of $max_attempts..."
+            if curl -sf "${{ vars.DEPLOY_URL }}/api/health"; then
+              echo "Health check passed."
+              exit 0
+            fi
+            if [ $attempts -lt $max_attempts ]; then
+              echo "Retrying in ${sleep_seconds}s..."
+              sleep $sleep_seconds
+            fi
+          done
+          echo "Health check failed after $max_attempts attempts."
+          exit 1

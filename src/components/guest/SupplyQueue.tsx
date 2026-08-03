@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { usePolling } from '@/hooks/usePolling';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -28,46 +29,16 @@ function getDestination(supply: SupplyQueueItem): string {
 }
 
 export default function SupplyQueue({ guestCode, myRequestIds, partyName: _partyName }: SupplyQueueProps) {
-  const [supplies, setSupplies] = useState<SupplyQueueItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const transform = useCallback((json: unknown) => {
+    const data = json as { supplies: SupplyQueueItem[] };
+    return data.supplies;
+  }, []);
 
-  const fetchSupplies = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/party/${guestCode}/requests/supplies`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to load supply queue');
-      }
-      const data = await res.json();
-      setSupplies(data.supplies);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load supply queue');
-    } finally {
-      setLoading(false);
-    }
-  }, [guestCode]);
-
-  useEffect(() => {
-    fetchSupplies();
-  }, [fetchSupplies]);
-
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    const interval = setInterval(fetchSupplies, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchSupplies();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchSupplies]);
+  const { data: supplies, loading, error } = usePolling<SupplyQueueItem[]>({
+    url: `/api/party/${guestCode}/requests/supplies`,
+    intervalMs: 3000,
+    transform,
+  });
 
   if (loading) {
     return (
@@ -81,9 +52,9 @@ export default function SupplyQueue({ guestCode, myRequestIds, partyName: _party
     return <ErrorMessage message={error} />;
   }
 
-  const beingDelivered = supplies.filter((s) => s.status === 'SEEN');
-  const inQueue = supplies.filter((s) => s.status === 'NEW');
-  const delivered = supplies.filter((s) => s.status === 'DONE');
+  const beingDelivered = (supplies || []).filter((s) => s.status === 'SEEN');
+  const inQueue = (supplies || []).filter((s) => s.status === 'NEW');
+  const delivered = (supplies || []).filter((s) => s.status === 'DONE');
 
   const isMine = (id: string) => myRequestIds.includes(id);
 
@@ -198,7 +169,7 @@ export default function SupplyQueue({ guestCode, myRequestIds, partyName: _party
       )}
 
       {/* Empty state */}
-      {supplies.length === 0 && (
+      {(supplies || []).length === 0 && (
         <div className="py-s-4">
           <p className="text-ink-50 font-zen text-body">No supply requests yet</p>
         </div>

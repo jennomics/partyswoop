@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { usePolling } from '@/hooks/usePolling';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
@@ -18,46 +19,13 @@ interface SongQueueProps {
 }
 
 export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
-  const [songs, setSongs] = useState<SongQueueItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const transform = useCallback((json: unknown) => json as SongQueueItem[], []);
 
-  const fetchSongs = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/party/${guestCode}/requests/songs`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to load song queue');
-      }
-      const data = await res.json();
-      setSongs(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load song queue');
-    } finally {
-      setLoading(false);
-    }
-  }, [guestCode]);
-
-  useEffect(() => {
-    fetchSongs();
-  }, [fetchSongs]);
-
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    const interval = setInterval(fetchSongs, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchSongs();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchSongs]);
+  const { data: songs, loading, error } = usePolling<SongQueueItem[]>({
+    url: `/api/party/${guestCode}/requests/songs`,
+    intervalMs: 3000,
+    transform,
+  });
 
   if (loading) {
     return (
@@ -71,8 +39,8 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
     return <ErrorMessage message={error} />;
   }
 
-  const pendingSongs = songs.filter((s) => s.status === 'NEW' || s.status === 'SEEN');
-  const doneSongs = songs.filter((s) => s.status === 'DONE');
+  const pendingSongs = (songs || []).filter((s) => s.status === 'NEW' || s.status === 'SEEN');
+  const doneSongs = (songs || []).filter((s) => s.status === 'DONE');
 
   const nowPlaying = pendingSongs.length > 0 ? pendingSongs[0] : null;
   const inQueue = pendingSongs.slice(1);
@@ -180,7 +148,7 @@ export default function SongQueue({ guestCode, myRequestIds }: SongQueueProps) {
       )}
 
       {/* Empty state */}
-      {songs.length === 0 && (
+      {(songs || []).length === 0 && (
         <div className="py-s-4">
           <p className="text-ink-50 font-zen text-body">No song requests yet</p>
         </div>

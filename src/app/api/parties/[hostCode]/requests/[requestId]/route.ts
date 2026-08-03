@@ -46,9 +46,13 @@ export async function PATCH(
 
     const newStatus = body.status as string;
 
-    // Use conditional UPDATE with WHERE status = expected to prevent race conditions.
-    // If another request already changed the status, 0 rows will be updated.
-    const updateResult = await db
+    // Determine if we need to decrement inventory (DRINK/SUPPLY marked DONE).
+    const needsDecrement =
+      newStatus === 'DONE' &&
+      (existingRequest.category === 'DRINK' || existingRequest.category === 'SUPPLY');
+
+    // Build the status update query with conditional WHERE to prevent race conditions.
+    const statusUpdate = db
       .update(requests)
       .set({ status: newStatus })
       .where(
@@ -59,19 +63,9 @@ export async function PATCH(
       )
       .returning();
 
-    if (updateResult.length === 0) {
-      return NextResponse.json(
-        { error: 'Request was already updated. Please refresh and try again.' },
-        { status: 409 }
-      );
-    }
-
-    // Auto-decrement inventory when a DRINK or SUPPLY request is marked DONE.
-    // Use menuItemId for direct lookup when available, fall back to name matching.
-    if (
-      newStatus === 'DONE' &&
-      (existingRequest.category === 'DRINK' || existingRequest.category === 'SUPPLY')
-    ) {
+    if (needsDecrement) {
+      // Use db.batch() to atomically update status AND decrement inventory.
+      // D1's batch wraps all statements in a single transaction.
       const menuItemCondition = existingRequest.menuItemId
         ? and(
             eq(menuItems.id, existingRequest.menuItemId),
@@ -83,17 +77,36 @@ export async function PATCH(
             gt(menuItems.quantity, 0)
           );
 
-      const [updatedItem] = await db
+      // Decrement quantity and set available=false when quantity reaches 0 via CASE expression.
+      const inventoryDecrement = db
         .update(menuItems)
-        .set({ quantity: sql`${menuItems.quantity} - 1` })
+        .set({
+          quantity: sql`${menuItems.quantity} - 1`,
+          available: sql`CASE WHEN ${menuItems.quantity} - 1 <= 0 THEN 0 ELSE ${menuItems.available} END`,
+        })
         .where(menuItemCondition)
         .returning();
 
-      if (updatedItem && updatedItem.quantity === 0) {
-        await db
-          .update(menuItems)
-          .set({ available: false })
-          .where(eq(menuItems.id, updatedItem.id));
+      const [updateResult] = await db.batch([
+        statusUpdate,
+        inventoryDecrement,
+      ]);
+
+      if (updateResult.length === 0) {
+        return NextResponse.json(
+          { error: 'Request was already updated. Please refresh and try again.' },
+          { status: 409 }
+        );
+      }
+    } else {
+      // No inventory to decrement, just update status.
+      const updateResult = await statusUpdate;
+
+      if (updateResult.length === 0) {
+        return NextResponse.json(
+          { error: 'Request was already updated. Please refresh and try again.' },
+          { status: 409 }
+        );
       }
     }
 

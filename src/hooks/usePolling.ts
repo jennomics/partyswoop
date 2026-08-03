@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-interface UsePollingOptions<T> {
+export interface UsePollingOptions<T> {
   url: string;
   intervalMs?: number;
   enabled?: boolean;
   transform?: (data: unknown) => T;
 }
 
-interface UsePollingResult<T> {
+export interface UsePollingResult<T> {
   data: T | null;
   loading: boolean;
   error: string;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { usePolling } from '@/hooks/usePolling';
 import RequestQueue from '@/components/host/RequestQueue';
 import RequestViews from '@/components/host/RequestViews';
 import AudioAlert from '@/components/host/AudioAlert';
@@ -37,6 +38,18 @@ interface Location {
   code: string;
 }
 
+interface RequestItem {
+  id: string;
+  category: 'DRINK' | 'SUPPLY' | 'SONG' | 'OTHER';
+  item: string;
+  note: string | null;
+  deliveryType: 'LOCATION' | 'NAME';
+  deliveryValue: string;
+  status: 'NEW' | 'SEEN' | 'DONE';
+  createdAt: string;
+  location?: { name: string } | null;
+}
+
 type Tab = 'requests' | 'views' | 'menu' | 'inventory' | 'locations';
 
 export default function HostDashboard() {
@@ -49,6 +62,18 @@ export default function HostDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('requests');
   const [toast, setToast] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Central polling for requests - feeds both RequestQueue and AudioAlert
+  const { data: requestsData, refetch: refetchRequests } = usePolling<RequestItem[]>({
+    url: `/api/parties/${hostCode}/requests`,
+    intervalMs: 3000,
+    enabled: !!hostCode,
+  });
+
+  // Track new request count for AudioAlert
+  const newRequestCount = requestsData
+    ? requestsData.filter((r) => r.status === 'NEW').length
+    : 0;
 
   const fetchParty = useCallback(async () => {
     try {
@@ -131,7 +156,7 @@ export default function HostDashboard() {
             >
               {copied ? 'Copied' : 'Share link'}
             </button>
-            <AudioAlert hostCode={hostCode} />
+            <AudioAlert newRequestCount={newRequestCount} />
           </div>
         </div>
       </div>
@@ -140,7 +165,7 @@ export default function HostDashboard() {
       <div className="flex-1 overflow-y-auto min-h-0 px-s-2 py-s-2">
         <div className="max-w-sm mx-auto">
           {activeTab === 'requests' && (
-            <RequestQueue hostCode={hostCode} />
+            <RequestQueue hostCode={hostCode} requests={requestsData} onRefetch={refetchRequests} />
           )}
           {activeTab === 'views' && (
             <RequestViews hostCode={hostCode} />

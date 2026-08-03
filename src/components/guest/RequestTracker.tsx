@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { usePolling } from '@/hooks/usePolling';
+import { useCallback } from 'react';
 
 interface RequestTrackerProps {
   guestCode: string;
@@ -20,39 +21,19 @@ const STEP_LABELS: Record<Status, string> = {
 };
 
 export default function RequestTracker({ guestCode, requestId, item, note }: RequestTrackerProps) {
-  const [status, setStatus] = useState<Status>('NEW');
+  const transform = useCallback((json: unknown) => {
+    const data = json as { status?: Status };
+    return data.status || 'NEW';
+  }, []);
 
-  const pollStatus = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/party/${guestCode}/requests/${requestId}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.status) setStatus(data.status);
-      }
-    } catch {
-      // Silent fail for polling
-    }
-  }, [guestCode, requestId]);
+  const { data: status } = usePolling<Status>({
+    url: `/api/party/${guestCode}/requests/${requestId}`,
+    intervalMs: 3000,
+    transform,
+  });
 
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    pollStatus();
-    const interval = setInterval(pollStatus, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        pollStatus();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [pollStatus]);
-
-  const currentStepIndex = STEPS.indexOf(status);
+  const currentStatus = status || 'NEW';
+  const currentStepIndex = STEPS.indexOf(currentStatus);
 
   return (
     <div className="text-center">
@@ -96,15 +77,15 @@ export default function RequestTracker({ guestCode, requestId, item, note }: Req
 
       {/* Status message */}
       <div className="mt-s-4">
-        {status === 'NEW' && (
+        {currentStatus === 'NEW' && (
           <p className="font-zen text-body text-ink-72">Your request has been sent to the host.</p>
         )}
-        {status === 'SEEN' && (
+        {currentStatus === 'SEEN' && (
           <p className="inline-block bg-live text-white font-zen font-medium text-body px-s-2 py-s-1">
             The host has seen your request.
           </p>
         )}
-        {status === 'DONE' && (
+        {currentStatus === 'DONE' && (
           <p className="font-zen text-body text-ink-35">All done. Your request is complete.</p>
         )}
       </div>

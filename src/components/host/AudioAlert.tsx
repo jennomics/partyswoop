@@ -1,58 +1,26 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAudioAlert } from '@/hooks/useAudioAlert';
 
 interface AudioAlertProps {
-  hostCode: string;
+  newRequestCount: number;
 }
 
-interface RequestItem {
-  id: string;
-  status: string;
-}
-
-export default function AudioAlert({ hostCode }: AudioAlertProps) {
+/**
+ * Plays an audio alert when the new request count increases.
+ * Receives the count from the parent (which does the polling) to avoid duplicate fetches.
+ */
+export default function AudioAlert({ newRequestCount }: AudioAlertProps) {
   const { isEnabled, enable, playAlert } = useAudioAlert();
-  const [requestCount, setRequestCount] = useState<number | null>(null);
   const prevCountRef = useRef<number | null>(null);
 
-  const fetchRequests = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/parties/${hostCode}/requests`);
-      if (!res.ok) return;
-      const data: RequestItem[] = await res.json();
-      const newCount = data.filter((r) => r.status === 'NEW').length;
-      setRequestCount(newCount);
-    } catch {
-      // Silent fail for polling
-    }
-  }, [hostCode]);
-
   useEffect(() => {
-    fetchRequests();
-    const interval = setInterval(fetchRequests, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchRequests();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchRequests]);
-
-  useEffect(() => {
-    if (requestCount === null) return;
-    if (prevCountRef.current !== null && requestCount > prevCountRef.current && isEnabled) {
+    if (prevCountRef.current !== null && newRequestCount > prevCountRef.current && isEnabled) {
       playAlert();
     }
-    prevCountRef.current = requestCount;
-  }, [requestCount, isEnabled, playAlert]);
+    prevCountRef.current = newRequestCount;
+  }, [newRequestCount, isEnabled, playAlert]);
 
   if (isEnabled) {
     return (

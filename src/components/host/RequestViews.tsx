@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { usePolling } from '@/hooks/usePolling';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -56,50 +57,14 @@ function groupRequests(requests: RequestItem[], groupBy: GroupBy): Record<string
 }
 
 export default function RequestViews({ hostCode }: { hostCode: string }) {
-  const [requests, setRequests] = useState<RequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: requests, loading, error } = usePolling<RequestItem[]>({
+    url: `/api/parties/${hostCode}/requests`,
+    intervalMs: 3000,
+  });
   const [groupBy, setGroupBy] = useState<GroupBy>('guest');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
-  const fetchRequests = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/parties/${hostCode}/requests`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to load requests');
-      }
-      const data = await res.json();
-      setRequests(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load requests');
-    } finally {
-      setLoading(false);
-    }
-  }, [hostCode]);
-
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
-
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    const interval = setInterval(fetchRequests, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchRequests();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchRequests]);
 
   function toggleGroup(key: string) {
     setExpandedGroups((prev) => {
@@ -122,7 +87,7 @@ export default function RequestViews({ hostCode }: { hostCode: string }) {
   }
 
   // Apply filters
-  const filteredRequests = requests.filter((req) => {
+  const filteredRequests = (requests || []).filter((req) => {
     if (statusFilter !== 'ALL' && req.status !== statusFilter) return false;
     if (categoryFilter !== 'ALL' && req.category !== categoryFilter) return false;
     return true;

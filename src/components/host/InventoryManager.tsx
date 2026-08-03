@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { usePolling } from '@/hooks/usePolling';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -20,49 +21,15 @@ interface InventoryManagerProps {
 }
 
 export default function InventoryManager({ hostCode }: InventoryManagerProps) {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: inventoryData, loading, error: pollError, refetch: fetchInventory } = usePolling<{ items: InventoryItem[] }>({
+    url: `/api/parties/${hostCode}/inventory`,
+    intervalMs: 3000,
+  });
+  const items = inventoryData?.items || [];
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState('');
   const [editThreshold, setEditThreshold] = useState('');
-
-  const fetchInventory = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/parties/${hostCode}/inventory`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to fetch inventory');
-      }
-      const data = await res.json();
-      setItems(data.items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inventory');
-    } finally {
-      setLoading(false);
-    }
-  }, [hostCode]);
-
-  useEffect(() => {
-    fetchInventory();
-  }, [fetchInventory]);
-
-  // Poll every 3 seconds for near-real-time updates
-  useEffect(() => {
-    const interval = setInterval(fetchInventory, 3000);
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') {
-        fetchInventory();
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [fetchInventory]);
 
   async function saveQuantity(itemId: string) {
     setError('');
@@ -259,7 +226,7 @@ export default function InventoryManager({ hostCode }: InventoryManagerProps) {
 
   return (
     <div className="space-y-6" role="region" aria-label="Inventory management">
-      {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
+      {(error || pollError) && <ErrorMessage message={error || pollError} onDismiss={() => setError('')} />}
 
       {items.length === 0 ? (
         <div className="text-center py-8">
