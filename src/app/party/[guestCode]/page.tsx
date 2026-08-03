@@ -91,7 +91,7 @@ export default function GuestPage() {
   const fetchParty = useCallback(async () => {
     try {
       const url = locationCode
-        ? `/api/party/${guestCode}?location=${locationCode}`
+        ? `/api/party/${guestCode}?loc=${locationCode}`
         : `/api/party/${guestCode}`;
       const res = await fetch(url);
       if (!res.ok) {
