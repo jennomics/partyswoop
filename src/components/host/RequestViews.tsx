@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { usePolling } from '@/hooks/usePolling';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -56,15 +55,15 @@ function groupRequests(requests: RequestItem[], groupBy: GroupBy): Record<string
   return groups;
 }
 
-export default function RequestViews({ hostCode }: { hostCode: string }) {
-  const { data: requests, loading, error } = usePolling<RequestItem[]>({
-    url: `/api/parties/${hostCode}/requests`,
-    intervalMs: 3000,
-  });
+export default function RequestViews({ hostCode, requests: requestsProp }: { hostCode: string; requests: RequestItem[] | null }) {
   const [groupBy, setGroupBy] = useState<GroupBy>('guest');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const requests = requestsProp;
+  const loading = !requestsProp;
+  const error = '';
 
   function toggleGroup(key: string) {
     setExpandedGroups((prev) => {

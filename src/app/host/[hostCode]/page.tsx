@@ -168,7 +168,7 @@ export default function HostDashboard() {
             <RequestQueue hostCode={hostCode} requests={requestsData} onRefetch={refetchRequests} />
           )}
           {activeTab === 'views' && (
-            <RequestViews hostCode={hostCode} />
+            <RequestViews hostCode={hostCode} requests={requestsData} />
           )}
           {activeTab === 'menu' && (
             <MenuManager hostCode={hostCode} menuItems={party.menuItems} onUpdate={fetchParty} />
